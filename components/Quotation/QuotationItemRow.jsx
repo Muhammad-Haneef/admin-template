@@ -5,9 +5,9 @@ import { useFormContext } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { 
   GripVertical, Copy, Trash2, ChevronDown, ChevronUp, 
-  FileImage, AlignLeft 
+  FileImage, AlignLeft, Upload, X 
 } from "lucide-react";
-import { TextInput, NumberInput, SelectInput, RichTextEditor, FileUpload } from "@/components/FormElements";
+import { TextInput, NumberInput, SelectInput, RichTextEditor } from "@/components/FormElements";
 import { calculateItemTotal, formatCurrency } from "@/lib/quotation-utils";
 
 const unitOptions = [
@@ -280,12 +280,57 @@ export default function QuotationItemRow({
       {/* Image Upload */}
       {showImage && (
         <div className="pl-7 animate-in slide-in-from-top-2 duration-200">
-          <FileUpload
-            name={`items.${itemIndex}.image`}
-            accept="image/*"
-            maxFiles={1}
-            label="Item Image"
-          />
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-muted-foreground">Item Image</label>
+            <div 
+              onClick={() => document.getElementById(`item-image-${itemIndex}`)?.click()}
+              className="border-2 border-dashed border-border rounded-lg p-4 cursor-pointer hover:border-primary hover:bg-muted/30 transition-colors"
+            >
+              {item?.image ? (
+                <div className="relative">
+                  <img 
+                    src={typeof item.image === 'string' ? item.image : URL.createObjectURL(item.image)}
+                    alt="Item"
+                    className="w-full h-32 object-cover rounded"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setValue(`items.${itemIndex}.image`, null);
+                    }}
+                    className="absolute top-1 right-1 h-6 w-6 bg-destructive/80 hover:bg-destructive text-white"
+                  >
+                    <X className="w-3 h-3" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="text-center py-4">
+                  <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                  <p className="text-xs text-muted-foreground">Click to upload image</p>
+                </div>
+              )}
+            </div>
+            <input
+              id={`item-image-${itemIndex}`}
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  const reader = new FileReader();
+                  reader.onloadend = () => {
+                    setValue(`items.${itemIndex}.image`, reader.result);
+                  };
+                  reader.readAsDataURL(file);
+                }
+                e.target.value = '';
+              }}
+              className="hidden"
+            />
+          </div>
         </div>
       )}
 

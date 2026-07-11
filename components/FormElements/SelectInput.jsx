@@ -100,9 +100,9 @@ function SelectInputBase({
         </PopoverTrigger>
 
         <PopoverContent className="p-0 w-[var(--radix-popover-trigger-width)] min-w-[200px]" align="start">
-          <div className="flex flex-col max-h-[300px]">
+          <div className="relative flex flex-col max-h-[300px]">
             {searchable && (
-              <div className="flex items-center border-b border-input px-3 py-2 sticky top-0 bg-background z-10">
+              <div className="flex items-center border-b border-input px-3 py-2 bg-background z-10">
                 <input type="text" placeholder="Search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full text-sm bg-transparent outline-none border-0 placeholder:text-muted-foreground py-0.5" />
                 {searchTerm && <X className="h-3.5 w-3.5 text-muted-foreground cursor-pointer hover:text-foreground" onClick={() => setSearchTerm("")} />}

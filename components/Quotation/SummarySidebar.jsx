@@ -222,11 +222,9 @@ export default function SummarySidebar() {
         {signature ? (
           <div className="space-y-2">
             <div className="border border-border rounded-lg p-2 bg-white">
-              <Image
+              <img
                 src={signature}
                 alt="Signature"
-                width={200}
-                height={80}
                 className="object-contain w-full h-20"
               />
             </div>

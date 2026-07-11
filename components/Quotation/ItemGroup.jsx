@@ -3,9 +3,9 @@
 import React, { useState } from "react";
 import { useFormContext, useFieldArray } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronUp, GripVertical, Copy, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronUp, GripVertical, Copy, Trash2, Upload, X } from "lucide-react";
 import { calculateGroupSubtotal, formatCurrency } from "@/lib/quotation-utils";
-import { TextInput, TextareaInput, FileUpload } from "@/components/FormElements";
+import { TextInput, TextareaInput } from "@/components/FormElements";
 
 export default function ItemGroup({ groupIndex, groupId, onRemove, onDuplicate }) {
   const { control, watch, setValue } = useFormContext();
@@ -131,19 +131,63 @@ export default function ItemGroup({ groupIndex, groupId, onRemove, onDuplicate }
 
           {showImage && (
             <div className="border border-border rounded-lg p-3 bg-background">
-              <FileUpload
-                value={group?.image ? [group.image] : []}
-                onChange={(files) => {
-                  const itemIndex = items.findIndex(item => item.id === groupId);
-                  if (itemIndex >= 0) {
-                    setValue(`items.${itemIndex}.image`, files[0]);
-                  }
-                }}
-                accept="image/*"
-                maxFiles={1}
-                label="Group Image"
-                helperText="Upload an image for this group"
-              />
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-muted-foreground">Group Image</label>
+                <div 
+                  onClick={() => document.getElementById(`group-image-${groupId}`)?.click()}
+                  className="border-2 border-dashed border-border rounded-lg p-4 cursor-pointer hover:border-primary hover:bg-muted/30 transition-colors"
+                >
+                  {group?.image ? (
+                    <div className="relative">
+                      <img 
+                        src={typeof group.image === 'string' ? group.image : URL.createObjectURL(group.image)}
+                        alt="Group"
+                        className="w-full h-32 object-cover rounded"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const itemIndex = items.findIndex(item => item.id === groupId);
+                          if (itemIndex >= 0) {
+                            setValue(`items.${itemIndex}.image`, null);
+                          }
+                        }}
+                        className="absolute top-1 right-1 h-6 w-6 bg-destructive/80 hover:bg-destructive text-white"
+                      >
+                        <X className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="text-center py-4">
+                      <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                      <p className="text-xs text-muted-foreground">Click to upload image</p>
+                    </div>
+                  )}
+                </div>
+                <input
+                  id={`group-image-${groupId}`}
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        const itemIndex = items.findIndex(item => item.id === groupId);
+                        if (itemIndex >= 0) {
+                          setValue(`items.${itemIndex}.image`, reader.result);
+                        }
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                    e.target.value = '';
+                  }}
+                  className="hidden"
+                />
+              </div>
             </div>
           )}
         </div>

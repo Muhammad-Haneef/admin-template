@@ -28,11 +28,15 @@ export default function AttachmentUploader() {
           name: file.name,
           size: file.size,
           type: file.type,
-          data: reader.result
+          data: reader.result,
+          preview: file.type.startsWith('image/') ? reader.result : null
         });
       };
       reader.readAsDataURL(file);
     });
+    
+    // Reset input
+    e.target.value = '';
   };
 
   const formatFileSize = (bytes) => {
@@ -81,19 +85,14 @@ export default function AttachmentUploader() {
       />
 
       {fields.length === 0 ? (
-        <div className="text-center py-8 text-muted-foreground border-2 border-dashed border-border rounded-lg">
+        <div 
+          onClick={() => document.getElementById("attachment-upload")?.click()}
+          className="text-center py-8 text-muted-foreground border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-primary hover:bg-muted/30 transition-colors"
+        >
           <Paperclip className="w-10 h-10 mx-auto mb-2 opacity-50" />
           <p className="text-sm">No attachments added</p>
           <p className="text-xs mt-1">Maximum file size: 10MB</p>
-          <Button
-            type="button"
-            variant="link"
-            size="sm"
-            onClick={() => document.getElementById("attachment-upload")?.click()}
-            className="mt-2 text-xs"
-          >
-            Upload Files
-          </Button>
+          <p className="text-xs text-primary mt-2">Click to upload files</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -103,7 +102,17 @@ export default function AttachmentUploader() {
               className="flex items-center justify-between p-3 border border-border rounded-lg bg-background hover:bg-muted/30 transition-colors"
             >
               <div className="flex items-center gap-3 flex-1 min-w-0">
-                <FileIcon className="w-5 h-5 text-muted-foreground shrink-0" />
+                {field.preview ? (
+                  <div className="w-12 h-12 rounded border border-border overflow-hidden shrink-0 bg-white">
+                    <img 
+                      src={field.preview} 
+                      alt={field.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <FileIcon className="w-5 h-5 text-muted-foreground shrink-0" />
+                )}
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium truncate">{field.name}</p>
                   <p className="text-xs text-muted-foreground">
@@ -119,6 +128,7 @@ export default function AttachmentUploader() {
                   size="icon"
                   onClick={() => handleDownload(field)}
                   className="h-8 w-8"
+                  title="Download"
                 >
                   <Download className="w-4 h-4" />
                 </Button>
@@ -128,6 +138,7 @@ export default function AttachmentUploader() {
                   size="icon"
                   onClick={() => remove(index)}
                   className="h-8 w-8 text-destructive hover:text-destructive"
+                  title="Remove"
                 >
                   <X className="w-4 h-4" />
                 </Button>

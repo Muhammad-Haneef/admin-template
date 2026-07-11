@@ -279,7 +279,7 @@ function PhoneInputBase({
               </Button>
             </PopoverTrigger>
             <PopoverContent className="p-0 w-64 max-h-72 flex flex-col" align="start">
-              <div className="flex items-center border-b border-input px-3 py-2 bg-background sticky top-0">
+              <div className="flex items-center border-b border-input px-3 py-2 bg-background">
                 <input
                   type="text"
                   placeholder="Search country..."

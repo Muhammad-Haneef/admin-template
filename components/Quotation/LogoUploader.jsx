@@ -3,7 +3,6 @@
 import React, { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@iconify/react";
-import Image from "next/image";
 import { Upload, X, Edit2 } from "lucide-react";
 
 export default function LogoUploader({ value, onChange, className = "" }) {
@@ -57,11 +56,9 @@ export default function LogoUploader({ value, onChange, className = "" }) {
     return (
       <div className={`relative group ${className}`}>
         <div className="w-32 h-32 border border-border rounded-lg overflow-hidden bg-white flex items-center justify-center p-2">
-          <Image
+          <img
             src={value}
             alt="Company Logo"
-            width={120}
-            height={120}
             className="object-contain max-w-full max-h-full"
           />
         </div>
