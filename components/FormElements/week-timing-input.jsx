@@ -4,7 +4,7 @@ import React from "react";
 import { useFormContext, Controller } from "react-hook-form";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { SwitchInput } from "./SwitchInput";
+import { SwitchInput } from "./switch-input";
 import { cn } from "@/lib/utils";
 import { Copy, Trash2 } from "lucide-react";
 

@@ -1,7 +1,7 @@
 "use client";
 import { useEffect } from "react";
 import { Controller, useFormContext } from "react-hook-form";
-import CheckboxInput from "./CheckboxInput";
+import CheckboxInput from "./checkboxInput";
 import { cn } from "@/lib/utils";
 import { daysOfWeek } from "@/mock/daysOfWeek";
 
