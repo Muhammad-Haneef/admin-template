@@ -225,19 +225,19 @@ export default function QuotationBuilderPage() {
             </div>
 
             {/* Main Content - Items Table & Summary Sidebar */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            <div className="mb-6">
               {/* Items Table - Takes 2/3 width on large screens */}
-              <div className="lg:col-span-2">
+              <div>
                 <QuotationItemsTable />
                 {formState.errors?.items?.message && (
                   <p className="text-sm text-destructive mt-2">{formState.errors.items.message}</p>
                 )}
               </div>
 
-              {/* Summary Sidebar - Takes 1/3 width on large screens */}
-              <div className="lg:col-span-1">
-                <SummarySidebar />
-              </div>
+            </div>
+            {/* Summary Sidebar - Takes 1/3 width on large screens */}
+            <div className="ml-auto w-1/3">
+              <SummarySidebar />
             </div>
 
             {/* Contact Details */}
