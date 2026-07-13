@@ -1,277 +1,134 @@
 "use client";
 
-import React, { useState } from "react";
-import { useFormContext, useFieldArray } from "react-hook-form";
+import { useMemo, useState } from "react";
+import { useFormContext, useFieldArray, useWatch } from "react-hook-form";
+import { Plus, X, Tag } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { NumberInput, SelectInput } from "@/components/FormElements";
-import { Plus, X, Upload, Edit2 } from "lucide-react";
-import { 
-  calculateGrandTotal, 
-  numberToWords, 
-  formatCurrency,
-  calculateTotalQuantity 
-} from "@/lib/quotation-utils";
-import Image from "next/image";
-
-const discountTypeOptions = [
-  { label: "%", value: "percentage" },
-  { label: "Fixed", value: "fixed" }
-];
-
-const roundModeOptions = [
-  { label: "No Rounding", value: "none" },
-  { label: "Round Up", value: "up" },
-  { label: "Round Down", value: "down" }
-];
+import { NumberInput, SelectInput, TextInput, ImageUpload } from "@/components/FormElements";
+import {
+  CURRENCY_SYMBOLS,
+  DISCOUNT_TYPE_OPTIONS,
+  ROUND_MODE_OPTIONS,
+  computeGrandTotals,
+  amountToWords,
+  money,
+  makeCharge,
+} from "@/lib/quotation-calculations";
 
 export default function SummarySidebar() {
-  const { control, watch, setValue } = useFormContext();
-  const [signatureFile, setSignatureFile] = useState(null);
+  const { control } = useFormContext();
+  const [chargesOpen, setChargesOpen] = useState(false);
 
-  const { fields: chargeFields, append: appendCharge, remove: removeCharge } = useFieldArray({
-    control,
-    name: "additionalCharges"
-  });
+  const currency = useWatch({ control, name: "currency" }) || "PKR";
+  const symbol = CURRENCY_SYMBOLS[currency] || "";
 
-  const items = watch("items") || [];
-  const currency = watch("currency") || "PKR";
-  const overallDiscountType = watch("overallDiscountType") || "percentage";
-  const overallDiscountValue = watch("overallDiscountValue") || 0;
-  const additionalCharges = watch("additionalCharges") || [];
-  const roundMode = watch("roundMode") || "none";
-  const signature = watch("signature");
+  const items = useWatch({ control, name: "items" });
+  const groups = useWatch({ control, name: "groups" });
+  const overallDiscountType = useWatch({ control, name: "overallDiscountType" });
+  const overallDiscountValue = useWatch({ control, name: "overallDiscountValue" });
+  const roundMode = useWatch({ control, name: "roundMode" });
+  const additionalCharges = useWatch({ control, name: "additionalCharges" });
 
-  // Calculate totals
-  const totals = calculateGrandTotal({
-    items,
-    overallDiscountType,
-    overallDiscountValue,
-    additionalCharges,
-    roundMode
-  });
+  const chargesArray = useFieldArray({ control, name: "additionalCharges" });
 
-  const totalQuantity = calculateTotalQuantity(items);
-  const totalInWords = numberToWords(totals.grandTotal, currency === "PKR" ? "Rupees" : currency);
-
-  const handleAddCharge = () => {
-    appendCharge({
-      label: "",
-      amount: 0
-    });
-  };
-
-  const handleSignatureUpload = (e) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setValue("signature", reader.result);
-        setSignatureFile(file);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleRemoveSignature = () => {
-    setValue("signature", null);
-    setSignatureFile(null);
-  };
+  const totals = useMemo(
+    () =>
+      computeGrandTotals({
+        items,
+        groups,
+        overallDiscountType,
+        overallDiscountValue,
+        additionalCharges,
+        roundMode,
+      }),
+    [items, groups, overallDiscountType, overallDiscountValue, additionalCharges, roundMode]
+  );
 
   return (
-    <div className="sticky top-6 space-y-4">
-      <div className="bg-card rounded-xl border border-border p-6 shadow-sm">
-        <h3 className="text-base font-semibold mb-4 pb-3 border-b border-border">
-          Summary
-        </h3>
-
-        <div className="space-y-3">
-          {/* Subtotal */}
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Subtotal:</span>
-            <span className="font-medium">{formatCurrency(totals.subtotal, currency)}</span>
+    <div className="flex flex-col gap-4 sticky top-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Summary</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          <div className="flex items-center justify-between border-b pb-2 text-sm">
+            <span className="text-muted-foreground uppercase text-xs font-semibold">Amount</span>
+            <span className="font-bold">{money(totals.amount, symbol)}</span>
+          </div>
+          <div className="flex items-center justify-between border-b pb-2 text-sm">
+            <span className="text-muted-foreground uppercase text-xs font-semibold">Tax</span>
+            <span className="font-bold">{money(totals.tax, symbol)}</span>
           </div>
 
-          {/* Tax */}
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Total Tax:</span>
-            <span className="font-medium">{formatCurrency(totals.totalTax, currency)}</span>
-          </div>
-
-          {/* Overall Discount */}
-          <div className="border-t pt-3 space-y-2">
-            <p className="text-xs font-medium text-muted-foreground">Overall Discount</p>
-            <div className="grid grid-cols-2 gap-2">
-              <SelectInput
-                name="overallDiscountType"
-                options={discountTypeOptions}
-                placeholder="Type"
-              />
-              <NumberInput
-                name="overallDiscountValue"
-                placeholder="0"
-                min={0}
-                allowDecimal={true}
-              />
-            </div>
-            {totals.overallDiscount > 0 && (
-              <div className="flex justify-between text-sm text-destructive">
-                <span>Discount:</span>
-                <span>-{formatCurrency(totals.overallDiscount, currency)}</span>
-              </div>
-            )}
-          </div>
-
-          {/* Additional Charges */}
-          <div className="border-t pt-3 space-y-2">
-            <div className="flex items-center justify-between">
-              <p className="text-xs font-medium text-muted-foreground">Additional Charges</p>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={handleAddCharge}
-                className="h-6 px-2 text-xs"
-              >
-                <Plus className="w-3 h-3" />
-              </Button>
-            </div>
-
-            {chargeFields.map((field, index) => (
-              <div key={field.id} className="flex gap-2">
-                <input
-                  type="text"
-                  {...control.register(`additionalCharges.${index}.label`)}
-                  placeholder="Label"
-                  className="flex-1 px-2 py-1 border border-input rounded text-xs"
-                />
-                <input
-                  type="number"
-                  {...control.register(`additionalCharges.${index}.amount`, {
-                    valueAsNumber: true
-                  })}
-                  placeholder="0"
-                  className="w-20 px-2 py-1 border border-input rounded text-xs"
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => removeCharge(index)}
-                  className="h-7 w-7 text-destructive"
-                >
-                  <X className="w-3 h-3" />
-                </Button>
-              </div>
-            ))}
-
-            {totals.chargesTotal > 0 && (
-              <div className="flex justify-between text-sm text-green-600">
-                <span>Total Charges:</span>
-                <span>+{formatCurrency(totals.chargesTotal, currency)}</span>
-              </div>
-            )}
-          </div>
-
-          {/* Rounding */}
-          <div className="border-t pt-3">
-            <SelectInput
-              name="roundMode"
-              label="Rounding"
-              options={roundModeOptions}
+          <div className="grid grid-cols-2 gap-2 items-end">
+            <SelectInput name="overallDiscountType" label="Discount" options={DISCOUNT_TYPE_OPTIONS} placeholder="Type" />
+            <NumberInput
+              name="overallDiscountValue"
+              label=""
+              placeholder={overallDiscountType === "percentage" ? "0%" : "0.00"}
+              min={0}
             />
-            {totals.roundingDifference !== 0 && (
-              <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                <span>Rounding Adjustment:</span>
-                <span>
-                  {totals.roundingDifference > 0 ? "+" : ""}
-                  {formatCurrency(totals.roundingDifference, currency)}
-                </span>
+          </div>
+
+          <div>
+            <button
+              type="button"
+              onClick={() => setChargesOpen((o) => !o)}
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-foreground hover:text-primary"
+            >
+              <Tag className="w-4 h-4" /> Additional Charges
+            </button>
+            {chargesOpen && (
+              <div className="mt-2 flex flex-col gap-2">
+                {chargesArray.fields.map((f, i) => (
+                  <div key={f.id} className="flex items-end gap-2">
+                    <div className="flex-1">
+                      <TextInput name={`additionalCharges.${i}.label`} label="" placeholder="e.g. Delivery" />
+                    </div>
+                    <div className="w-28">
+                      <NumberInput name={`additionalCharges.${i}.amount`} label="" placeholder="0.00" min={0} />
+                    </div>
+                    <button type="button" onClick={() => chargesArray.remove(i)} className="text-muted-foreground hover:text-destructive mb-2" aria-label="Remove charge">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => chargesArray.append(makeCharge())}
+                  className="self-start inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
+                >
+                  <Plus className="w-3.5 h-3.5" /> Add Charge
+                </button>
               </div>
             )}
           </div>
 
-          {/* Total Quantity Summary */}
-          {totalQuantity > 0 && (
-            <div className="flex justify-between text-sm bg-muted/50 p-2 rounded">
-              <span className="text-muted-foreground">Total Quantity:</span>
-              <span className="font-medium">{totalQuantity}</span>
-            </div>
-          )}
+          <SelectInput name="roundMode" label="Rounding" options={ROUND_MODE_OPTIONS} placeholder="No rounding" />
 
-          {/* Grand Total */}
-          <div className="border-t-2 border-primary pt-3 mt-3">
-            <div className="flex justify-between text-lg font-bold">
-              <span>TOTAL:</span>
-              <span className="text-primary">
-                {formatCurrency(totals.grandTotal, currency)}
-              </span>
-            </div>
+          <div className="flex items-center justify-between border-t pt-3">
+            <span className="text-base font-extrabold">TOTAL</span>
+            <span className="text-lg font-extrabold">{money(totals.grand, symbol)}</span>
           </div>
 
-          {/* Total in Words */}
-          <div className="bg-muted/30 p-3 rounded text-xs text-muted-foreground italic">
-            {totalInWords}
+          <div className="border-t pt-3">
+            <p className="text-xs text-muted-foreground mb-1">Total (in words)</p>
+            <p className="text-sm italic text-muted-foreground">
+              {totals.grand > 0 ? amountToWords(totals.grand) : "—"}
+            </p>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
-      {/* Signature Section */}
-      <div className="bg-card rounded-xl border border-border p-6 shadow-sm">
-        <h3 className="text-sm font-semibold mb-3">Signature</h3>
-        
-        {signature ? (
-          <div className="space-y-2">
-            <div className="border border-border rounded-lg p-2 bg-white">
-              <img
-                src={signature}
-                alt="Signature"
-                className="object-contain w-full h-20"
-              />
-            </div>
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => document.getElementById("signature-upload")?.click()}
-                className="flex-1 text-xs"
-              >
-                <Edit2 className="w-3 h-3 mr-1" />
-                Change
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleRemoveSignature}
-                className="flex-1 text-xs text-destructive"
-              >
-                <X className="w-3 h-3 mr-1" />
-                Remove
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => document.getElementById("signature-upload")?.click()}
-            className="w-full text-xs"
-          >
-            <Upload className="w-3 h-3 mr-1" />
-            Upload Signature
-          </Button>
-        )}
-
-        <input
-          id="signature-upload"
-          type="file"
-          accept="image/*"
-          onChange={handleSignatureUpload}
-          className="hidden"
-        />
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Signature</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ImageUpload name="signature" label="" helperText="Upload a signature image" aspectRatio={3} />
+        </CardContent>
+      </Card>
     </div>
   );
 }

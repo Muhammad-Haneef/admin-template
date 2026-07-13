@@ -1,260 +1,293 @@
 "use client";
 
-import React from "react";
-import { useFormContext, useFieldArray } from "react-hook-form";
+import { useFormContext, useFieldArray, useWatch } from "react-hook-form";
+import { Plus, Trash2, Copy, ChevronUp, ChevronDown, ChevronsUpDown, ImagePlus } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, FolderPlus } from "lucide-react";
-import QuotationItemRow from "./QuotationItemRow";
-import ItemGroup from "./ItemGroup";
+import {
+  TextInput,
+  TextareaInput,
+  NumberInput,
+  SelectInput,
+  MultiImageUpload,
+} from "@/components/FormElements";
+import {
+  CATEGORY_OPTIONS,
+  STORE_OPTIONS,
+  UNIT_OPTIONS,
+  CURRENCY_SYMBOLS,
+  lineTotals,
+  money,
+  makeLineItem,
+  makeGroup,
+  makeGroupItem,
+} from "@/lib/quotation-calculations";
+
+function IconBtn({ onClick, disabled, label, children }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={label}
+      className="size-7 inline-flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-30 disabled:hover:bg-transparent"
+    >
+      {children}
+    </button>
+  );
+}
 
 export default function QuotationItemsTable() {
   const { control } = useFormContext();
-  
-  const { fields, append, remove, move } = useFieldArray({
-    control,
-    name: "items"
-  });
+  const currency = useWatch({ control, name: "currency" }) || "PKR";
+  const symbol = CURRENCY_SYMBOLS[currency] || "";
 
-  const handleAddItem = (groupId = null) => {
-    append({
-      id: `item-${Date.now()}`,
-      type: "item",
-      groupId: groupId,
-      name: "",
-      sku: "",
-      description: "",
-      image: null,
-      unit: "piece",
-      quantity: 1,
-      rate: 0,
-      discountType: "percentage",
-      discountValue: 0,
-      taxRate: 0,
-      taxAmount: 0,
-      subtotal: 0,
-      total: 0,
-      sortOrder: fields.length
-    });
-  };
-
-  const handleAddGroup = () => {
-    const groupId = `group-${Date.now()}`;
-    append({
-      id: groupId,
-      type: "group",
-      name: "",
-      description: "",
-      image: null,
-      collapsed: false,
-      sortOrder: fields.length
-    });
-  };
-
-  const handleDuplicateItem = (index) => {
-    const item = fields[index];
-    append({
-      ...item,
-      id: `item-${Date.now()}`,
-      name: `${item.name} (Copy)`
-    });
-  };
-
-  const handleDuplicateGroup = (groupId) => {
-    const groupIndex = fields.findIndex(f => f.id === groupId);
-    if (groupIndex >= 0) {
-      const group = fields[groupIndex];
-      const newGroupId = `group-${Date.now()}`;
-      
-      // Duplicate group
-      append({
-        ...group,
-        id: newGroupId,
-        name: `${group.name} (Copy)`
-      });
-
-      // Duplicate all items in the group
-      fields.forEach((field, index) => {
-        if (field.groupId === groupId && field.type === "item") {
-          append({
-            ...field,
-            id: `item-${Date.now()}-${index}`,
-            groupId: newGroupId
-          });
-        }
-      });
-    }
-  };
-
-  // Group items by their groupId
-  const groupedItems = fields.reduce((acc, field, index) => {
-    if (field.type === "group") {
-      acc[field.id] = {
-        group: field,
-        groupIndex: index,
-        items: []
-      };
-    }
-    return acc;
-  }, {});
-
-  // Add items to their respective groups
-  fields.forEach((field, index) => {
-    if (field.type === "item" && field.groupId && groupedItems[field.groupId]) {
-      groupedItems[field.groupId].items.push({ ...field, index });
-    }
-  });
-
-  // Ungrouped items
-  const ungroupedItems = fields
-    .map((field, index) => ({ ...field, index }))
-    .filter(field => field.type === "item" && !field.groupId);
+  const itemsArray = useFieldArray({ control, name: "items" });
+  const groupsArray = useFieldArray({ control, name: "groups" });
 
   return (
-    <div className="bg-card rounded-xl border border-border p-6 shadow-sm">
-      <div className="flex items-center justify-between mb-6 pb-3 border-b border-border">
-        <h3 className="text-base font-semibold">Items / Services</h3>
-        <div className="flex gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => handleAddItem()}
-            className="text-xs"
-          >
-            <Plus className="w-3 h-3 mr-1" />
-            Add Line
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={handleAddGroup}
-            className="text-xs"
-          >
-            <FolderPlus className="w-3 h-3 mr-1" />
-            Add Group
-          </Button>
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle>Items</CardTitle>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-3">
+        <div className="hidden md:grid grid-cols-12 gap-2 bg-primary text-primary-foreground text-[11px] font-bold uppercase tracking-wide px-3 py-2 rounded-md">
+          <div className="col-span-4">Item Description</div>
+          <div className="col-span-2">Rate</div>
+          <div className="col-span-1">Qty</div>
+          <div className="col-span-2">Amount</div>
+          <div className="col-span-1">Tax %</div>
+          <div className="col-span-1">Tax</div>
+          <div className="col-span-1">Total</div>
         </div>
-      </div>
 
-      {/* Empty State */}
-      {fields.length === 0 && (
-        <div className="text-center py-12 text-muted-foreground border-2 border-dashed border-border rounded-lg">
-          <div className="flex flex-col items-center gap-3">
-            <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
-              <Plus className="w-8 h-8" />
-            </div>
-            <div>
-              <p className="text-base font-medium text-foreground mb-1">No items added yet</p>
-              <p className="text-sm">Add line items or create groups to organize your quotation</p>
-            </div>
-            <div className="flex gap-2 mt-2">
-              <Button
-                type="button"
-                variant="default"
-                size="sm"
-                onClick={() => handleAddItem()}
-              >
-                <Plus className="w-4 h-4 mr-1" />
-                Add First Item
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleAddGroup}
-              >
-                <FolderPlus className="w-4 h-4 mr-1" />
-                Create Group
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Render Items and Groups */}
-      <div className="space-y-4">
-        {/* Ungrouped Items */}
-        {ungroupedItems.map((item, idx) => (
-          <QuotationItemRow
-            key={item.id}
-            itemIndex={item.index}
-            onRemove={() => remove(item.index)}
-            onDuplicate={() => handleDuplicateItem(item.index)}
-            isFirst={idx === 0 && Object.keys(groupedItems).length === 0}
+        {itemsArray.fields.map((field, index) => (
+          <LineItemRow
+            key={field.id}
+            index={index}
+            symbol={symbol}
+            canMoveUp={index > 0}
+            canMoveDown={index < itemsArray.fields.length - 1}
+            onMoveUp={() => itemsArray.swap(index, index - 1)}
+            onMoveDown={() => itemsArray.swap(index, index + 1)}
+            onDuplicate={() => itemsArray.insert(index + 1, { ...itemsArray.fields[index] })}
+            onRemove={() => itemsArray.fields.length > 1 && itemsArray.remove(index)}
           />
         ))}
 
-        {/* Groups with their Items */}
-        {Object.entries(groupedItems).map(([groupId, groupData]) => (
-          <div key={groupId} className="space-y-3">
-            <ItemGroup
-              groupIndex={groupData.groupIndex}
-              groupId={groupId}
-              onRemove={() => {
-                // Remove all items in the group first
-                groupData.items.forEach((item) => {
-                  remove(item.index);
-                });
-                // Then remove the group
-                remove(groupData.groupIndex);
-              }}
-              onDuplicate={() => handleDuplicateGroup(groupId)}
-            />
-
-            {/* Items within this group */}
-            <div className="ml-8 space-y-3">
-              {groupData.items.map((item, idx) => (
-                <QuotationItemRow
-                  key={item.id}
-                  itemIndex={item.index}
-                  onRemove={() => remove(item.index)}
-                  onDuplicate={() => handleDuplicateItem(item.index)}
-                  isFirst={idx === 0}
-                />
-              ))}
-
-              {/* Add item to this group */}
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => handleAddItem(groupId)}
-                className="text-xs w-full border-dashed"
-              >
-                <Plus className="w-3 h-3 mr-1" />
-                Add Item to Group
-              </Button>
-            </div>
-          </div>
+        {groupsArray.fields.map((field, gIndex) => (
+          <GroupCard
+            key={field.id}
+            groupIndex={gIndex}
+            symbol={symbol}
+            canMoveUp={gIndex > 0}
+            canMoveDown={gIndex < groupsArray.fields.length - 1}
+            onMoveUp={() => groupsArray.swap(gIndex, gIndex - 1)}
+            onMoveDown={() => groupsArray.swap(gIndex, gIndex + 1)}
+            onDuplicate={() => groupsArray.insert(gIndex + 1, { ...groupsArray.fields[gIndex] })}
+            onRemove={() => groupsArray.remove(gIndex)}
+          />
         ))}
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+          <Button type="button" variant="outline" className="border-dashed" onClick={() => itemsArray.append(makeLineItem())}>
+            <Plus className="w-4 h-4 mr-1.5" /> Add New Line
+          </Button>
+          <Button type="button" variant="outline" className="border-dashed" onClick={() => groupsArray.append(makeGroup())}>
+            <Plus className="w-4 h-4 mr-1.5" /> Add New Group
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Single line item row                                                 */
+/* ------------------------------------------------------------------ */
+
+function LineItemRow({ index, symbol, canMoveUp, canMoveDown, onMoveUp, onMoveDown, onDuplicate, onRemove }) {
+  const { control, setValue } = useFormContext();
+  const row = useWatch({ control, name: `items.${index}` });
+  const showDescription = useWatch({ control, name: `items.${index}.showDescription` });
+  const showImages = useWatch({ control, name: `items.${index}.showImages` });
+  const collapsed = useWatch({ control, name: `items.${index}.collapsed` });
+  const t = lineTotals(row || {});
+
+  return (
+    <div className="rounded-lg border overflow-hidden">
+      <div className="flex items-center justify-between px-3 py-1.5 bg-muted/50 border-b">
+        <span className="text-xs font-semibold text-muted-foreground">{index + 1}.</span>
+        <div className="flex items-center gap-0.5">
+          <IconBtn label="Move up" onClick={onMoveUp} disabled={!canMoveUp}><ChevronUp className="w-4 h-4" /></IconBtn>
+          <IconBtn label="Move down" onClick={onMoveDown} disabled={!canMoveDown}><ChevronDown className="w-4 h-4" /></IconBtn>
+          <IconBtn label="Collapse" onClick={() => setValue(`items.${index}.collapsed`, !collapsed)}><ChevronsUpDown className="w-4 h-4" /></IconBtn>
+          <IconBtn label="Duplicate" onClick={onDuplicate}><Copy className="w-4 h-4" /></IconBtn>
+          <IconBtn label="Remove" onClick={onRemove}><Trash2 className="w-4 h-4" /></IconBtn>
+        </div>
       </div>
 
-      {/* Add More Items Footer */}
-      {fields.length > 0 && (
-        <div className="flex gap-2 mt-6 pt-4 border-t border-border">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => handleAddItem()}
-            className="flex-1"
-          >
-            <Plus className="w-3 h-3 mr-1" />
-            Add Another Line
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={handleAddGroup}
-            className="flex-1"
-          >
-            <FolderPlus className="w-3 h-3 mr-1" />
-            Add Another Group
+      <div className="p-3 flex flex-col gap-3">
+        <div className="grid grid-cols-12 gap-2 items-start">
+          <div className="col-span-12 md:col-span-4">
+            <TextInput name={`items.${index}.name`} label="" placeholder="Item description" is_required />
+          </div>
+          <div className="col-span-6 md:col-span-2">
+            <NumberInput name={`items.${index}.rate`} label="" placeholder="0.00" min={0} />
+          </div>
+          <div className="col-span-6 md:col-span-1">
+            <NumberInput name={`items.${index}.qty`} label="" placeholder="1" min={0} />
+          </div>
+          <div className="col-span-6 md:col-span-2 text-sm font-medium pt-2 text-right pr-1">{money(t.amount, symbol)}</div>
+          <div className="col-span-6 md:col-span-1">
+            <NumberInput name={`items.${index}.taxRate`} label="" placeholder="0" min={0} max={100} />
+          </div>
+          <div className="col-span-6 md:col-span-1 text-sm pt-2 text-right">{money(t.tax, symbol)}</div>
+          <div className="col-span-6 md:col-span-1 text-sm font-bold pt-2 text-right">{money(t.total, symbol)}</div>
+        </div>
+
+        {!collapsed && (
+          <>
+            <div>
+              <button
+                type="button"
+                onClick={() => setValue(`items.${index}.showDescription`, !showDescription)}
+                className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1 mb-2"
+              >
+                {showDescription ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />} Description
+              </button>
+              {showDescription && <TextareaInput name={`items.${index}.description`} label="" placeholder="Description" rows={3} />}
+            </div>
+
+            {!showImages ? (
+              <Button type="button" variant="outline" size="sm" className="self-start border-dashed" onClick={() => setValue(`items.${index}.showImages`, true)}>
+                <ImagePlus className="w-4 h-4 mr-1.5" /> Upload Image
+              </Button>
+            ) : (
+              <MultiImageUpload name={`items.${index}.images`} label="Images" maxFiles={4} />
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <SelectInput name={`items.${index}.category`} label="Category" options={CATEGORY_OPTIONS} placeholder="Select category" />
+              <SelectInput name={`items.${index}.subcategory`} label="Store" options={STORE_OPTIONS} placeholder="Select store" />
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Group card — a titled bundle of items                               */
+/* ------------------------------------------------------------------ */
+
+function GroupCard({ groupIndex, symbol, canMoveUp, canMoveDown, onMoveUp, onMoveDown, onDuplicate, onRemove }) {
+  const { control, setValue } = useFormContext();
+  const collapsed = useWatch({ control, name: `groups.${groupIndex}.collapsed` });
+  const showImages = useWatch({ control, name: `groups.${groupIndex}.showImages` });
+  const itemsArray = useFieldArray({ control, name: `groups.${groupIndex}.items` });
+
+  return (
+    <div className="rounded-lg border overflow-hidden bg-muted/20">
+      <div className="flex items-center justify-between px-3 py-2 bg-muted/50 border-b gap-3">
+        <div className="flex-1 max-w-xs">
+          <TextInput name={`groups.${groupIndex}.title`} label="" placeholder="Group title" is_required />
+        </div>
+        <div className="flex items-center gap-0.5 shrink-0">
+          <IconBtn label="Move up" onClick={onMoveUp} disabled={!canMoveUp}><ChevronUp className="w-4 h-4" /></IconBtn>
+          <IconBtn label="Move down" onClick={onMoveDown} disabled={!canMoveDown}><ChevronDown className="w-4 h-4" /></IconBtn>
+          <IconBtn label="Collapse" onClick={() => setValue(`groups.${groupIndex}.collapsed`, !collapsed)}><ChevronsUpDown className="w-4 h-4" /></IconBtn>
+          <IconBtn label="Duplicate" onClick={onDuplicate}><Copy className="w-4 h-4" /></IconBtn>
+          <IconBtn label="Remove" onClick={onRemove}><Trash2 className="w-4 h-4" /></IconBtn>
+        </div>
+      </div>
+
+      {!collapsed && (
+        <div className="p-3 flex flex-col gap-3">
+          {!showImages ? (
+            <Button type="button" variant="outline" size="sm" className="self-start border-dashed" onClick={() => setValue(`groups.${groupIndex}.showImages`, true)}>
+              <ImagePlus className="w-4 h-4 mr-1.5" /> Upload Image
+            </Button>
+          ) : (
+            <MultiImageUpload name={`groups.${groupIndex}.images`} label="Group Images" maxFiles={4} />
+          )}
+
+          {itemsArray.fields.map((field, i) => (
+            <GroupItemRow
+              key={field.id}
+              groupIndex={groupIndex}
+              itemIndex={i}
+              symbol={symbol}
+              canMoveUp={i > 0}
+              canMoveDown={i < itemsArray.fields.length - 1}
+              onMoveUp={() => itemsArray.swap(i, i - 1)}
+              onMoveDown={() => itemsArray.swap(i, i + 1)}
+              onDuplicate={() => itemsArray.insert(i + 1, { ...itemsArray.fields[i] })}
+              onRemove={() => itemsArray.fields.length > 1 && itemsArray.remove(i)}
+            />
+          ))}
+
+          <Button type="button" variant="ghost" size="sm" className="self-start text-primary" onClick={() => itemsArray.append(makeGroupItem())}>
+            <Plus className="w-4 h-4 mr-1.5" /> Add item to group
           </Button>
         </div>
       )}
+    </div>
+  );
+}
+
+function GroupItemRow({ groupIndex, itemIndex, symbol, canMoveUp, canMoveDown, onMoveUp, onMoveDown, onDuplicate, onRemove }) {
+  const { control, setValue } = useFormContext();
+  const base = `groups.${groupIndex}.items.${itemIndex}`;
+  const row = useWatch({ control, name: base });
+  const showDescription = useWatch({ control, name: `${base}.showDescription` });
+  const showImages = useWatch({ control, name: `${base}.showImages` });
+  const t = lineTotals(row || {});
+
+  return (
+    <div className="rounded-lg border bg-background p-3 flex flex-col gap-2">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-semibold text-muted-foreground">{itemIndex + 1}.</span>
+        <div className="flex items-center gap-0.5">
+          <IconBtn label="Move up" onClick={onMoveUp} disabled={!canMoveUp}><ChevronUp className="w-4 h-4" /></IconBtn>
+          <IconBtn label="Move down" onClick={onMoveDown} disabled={!canMoveDown}><ChevronDown className="w-4 h-4" /></IconBtn>
+          <IconBtn label="Duplicate" onClick={onDuplicate}><Copy className="w-4 h-4" /></IconBtn>
+          <IconBtn label="Remove" onClick={onRemove}><Trash2 className="w-4 h-4" /></IconBtn>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-12 gap-2 items-start">
+        <div className="col-span-12 md:col-span-4">
+          <TextInput name={`${base}.name`} label="" placeholder="Item name / SKU" is_required />
+        </div>
+        <div className="col-span-6 md:col-span-2">
+          <NumberInput name={`${base}.rate`} label="" placeholder="0.00" min={0} />
+        </div>
+        <div className="col-span-6 md:col-span-1">
+          <NumberInput name={`${base}.qty`} label="" placeholder="1" min={0} />
+        </div>
+        <div className="col-span-6 md:col-span-2 text-sm font-medium pt-2 text-right pr-1">{money(t.amount, symbol)}</div>
+        <div className="col-span-6 md:col-span-1">
+          <NumberInput name={`${base}.taxRate`} label="" placeholder="0" min={0} max={100} />
+        </div>
+        <div className="col-span-6 md:col-span-2 text-sm font-bold pt-2 text-right">{money(t.total, symbol)}</div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-4">
+        <button type="button" onClick={() => setValue(`${base}.showDescription`, !showDescription)} className="text-xs text-muted-foreground hover:text-foreground">
+          {showDescription ? "Hide Description" : "+ Add Description"}
+        </button>
+        <button type="button" onClick={() => setValue(`${base}.showImages`, !showImages)} className="text-xs text-muted-foreground hover:text-foreground">
+          {showImages ? "Hide Image" : "+ Add Image"}
+        </button>
+        <div className="w-40">
+          <SelectInput name={`${base}.unit`} label="" options={UNIT_OPTIONS} placeholder="Unit" />
+        </div>
+      </div>
+
+      {showDescription && <TextareaInput name={`${base}.description`} label="" placeholder="Description" rows={2} />}
+      {showImages && <MultiImageUpload name={`${base}.images`} label="" maxFiles={4} />}
     </div>
   );
 }

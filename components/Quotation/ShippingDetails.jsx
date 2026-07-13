@@ -1,82 +1,35 @@
 "use client";
 
-import React from "react";
-import { useFormContext } from "react-hook-form";
-import { CheckboxInput, TextInput, TextareaInput } from "@/components/FormElements";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { useFormContext, useWatch } from "react-hook-form";
+import { Card, CardContent } from "@/components/ui/card";
+import { CheckboxInput, TextInput, TextareaInput, PhoneInput } from "@/components/FormElements";
 
 export default function ShippingDetails() {
-  const { watch } = useFormContext();
-  const shippingEnabled = watch("shippingEnabled");
+  const { control } = useFormContext();
+  const shippingEnabled = useWatch({ control, name: "shippingEnabled" });
 
   return (
-    <div className="bg-card rounded-xl border border-border p-6 shadow-sm">
-      <div className="flex items-center justify-between mb-4">
-        <CheckboxInput
-          name="shippingEnabled"
-          label="Add Shipping Details"
-        />
-        {shippingEnabled ? (
-          <ChevronUp className="w-4 h-4 text-muted-foreground" />
-        ) : (
-          <ChevronDown className="w-4 h-4 text-muted-foreground" />
+    <Card>
+      <CardContent className="pt-6">
+        <CheckboxInput name="shippingEnabled" label="Add Shipping Details" helperText="Ship to a different address than the client's billing address" />
+
+        {shippingEnabled && (
+          <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <TextInput name="shippingDetails.name" label="Recipient Name" placeholder="Full name" />
+            <PhoneInput name="shippingDetails.phone" label="Phone" placeholder="+92 3xx xxxxxxx" />
+            <div className="sm:col-span-2">
+              <TextareaInput name="shippingDetails.address" label="Address" rows={2} placeholder="Street address" />
+            </div>
+            <TextInput name="shippingDetails.city" label="City" placeholder="City" />
+            <TextInput name="shippingDetails.state" label="State / Province" placeholder="State" />
+            <TextInput name="shippingDetails.postalCode" label="Postal Code" placeholder="Postal code" />
+            <TextInput name="shippingDetails.country" label="Country" placeholder="Country" />
+            <div className="sm:col-span-2">
+              <TextareaInput name="shippingDetails.notes" label="Delivery Notes" rows={2} placeholder="Any special delivery instructions" />
+            </div>
+          </div>
         )}
-      </div>
-
-      {shippingEnabled && (
-        <div className="space-y-4 border-t border-border pt-4 animate-in slide-in-from-top-2 duration-200">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <TextInput
-              name="shippingDetails.name"
-              label="Recipient Name"
-              placeholder="Enter recipient name"
-            />
-            <TextInput
-              name="shippingDetails.phone"
-              label="Contact Number"
-              placeholder="Enter contact number"
-            />
-          </div>
-
-          <TextareaInput
-            name="shippingDetails.address"
-            label="Shipping Address"
-            placeholder="Enter complete shipping address"
-            rows={3}
-          />
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <TextInput
-              name="shippingDetails.city"
-              label="City"
-              placeholder="Enter city"
-            />
-            <TextInput
-              name="shippingDetails.state"
-              label="State/Province"
-              placeholder="Enter state"
-            />
-            <TextInput
-              name="shippingDetails.postalCode"
-              label="Postal Code"
-              placeholder="Enter postal code"
-            />
-          </div>
-
-          <TextInput
-            name="shippingDetails.country"
-            label="Country"
-            placeholder="Enter country"
-          />
-
-          <TextareaInput
-            name="shippingDetails.notes"
-            label="Shipping Notes"
-            placeholder="Any special instructions for delivery..."
-            rows={2}
-          />
-        </div>
-      )}
-    </div>
+      </CardContent>
+    </Card>
   );
 }

@@ -1,131 +1,90 @@
 "use client";
 
-import React from "react";
+import { useState } from "react";
 import { useFormContext, useFieldArray } from "react-hook-form";
-import { TextInput, DatePickerInput } from "@/components/FormElements";
-import { Button } from "@/components/ui/button";
 import { Plus, X } from "lucide-react";
-import { generateQuotationNumber, getPreviousQuotationNumber } from "@/lib/quotation-utils";
+import { Card, CardContent } from "@/components/ui/card";
+import { TextInput, DatePickerInput, NumberInput } from "@/components/FormElements";
+import { makeCustomField } from "@/lib/quotation-calculations";
 
 export default function QuotationMetaCard() {
-  const { control, setValue, watch } = useFormContext();
-  
-  const { fields, append, remove } = useFieldArray({
-    control,
-    name: "customFields"
-  });
+  const { control } = useFormContext();
+  const [dueDateSettingsOpen, setDueDateSettingsOpen] = useState(false);
+  const [customFieldsOpen, setCustomFieldsOpen] = useState(false);
 
-  const quotationNumber = watch("quotationNumber");
-  const previousNumber = getPreviousQuotationNumber(quotationNumber);
-
-  const handleAddCustomField = () => {
-    append({
-      label: "",
-      value: "",
-      type: "text"
-    });
-  };
-
-  const handleGenerateNumber = () => {
-    const newNumber = generateQuotationNumber();
-    setValue("quotationNumber", newNumber, { shouldValidate: true });
-  };
+  const { fields, append, remove } = useFieldArray({ control, name: "customFields" });
 
   return (
-    <div className="bg-card rounded-xl border border-border p-6 shadow-sm">
-      <h3 className="text-base font-semibold mb-4 pb-3 border-b border-border">
-        Quotation Information
-      </h3>
+    <Card>
+      <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+        <TextInput
+          name="quotationNumber"
+          label="Quotation No"
+          is_required
+          helperText="Auto-generated — you can edit it if needed"
+        />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Quotation Number */}
-        <div className="space-y-1">
-          <TextInput
-            name="quotationNumber"
-            label="Quotation Number"
-            placeholder="QT-2024-001"
-            is_required={true}
-          />
-          {previousNumber && (
-            <p className="text-xs text-muted-foreground px-1">
-              Previous: {previousNumber}
-            </p>
-          )}
-          <Button
+        <DatePickerInput name="quotationDate" label="Quotation Date" is_required placeholder="Select date" />
+
+        <div>
+          <DatePickerInput name="dueDate" label="Due Date" placeholder="Select due date" />
+          <button
             type="button"
-            variant="ghost"
-            size="sm"
-            onClick={handleGenerateNumber}
-            className="text-xs h-7 mt-1"
+            onClick={() => setDueDateSettingsOpen((o) => !o)}
+            className="mt-1 text-xs font-medium text-primary hover:underline"
           >
-            Auto Generate
-          </Button>
+            {dueDateSettingsOpen ? "Hide reminder settings" : "Reminder settings"}
+          </button>
+          {dueDateSettingsOpen && (
+            <div className="mt-2 flex items-center gap-2">
+              <div className="w-24">
+                <NumberInput name="reminderDays" label="" placeholder="3" min={0} />
+              </div>
+              <span className="text-xs text-muted-foreground">days before due date</span>
+            </div>
+          )}
         </div>
 
-        {/* Quotation Date */}
-        <DatePickerInput
-          name="quotationDate"
-          label="Quotation Date"
-          placeholder="Select date"
-          is_required={true}
-        />
-
-        {/* Due Date */}
-        <DatePickerInput
-          name="dueDate"
-          label="Due Date"
-          placeholder="Select due date"
-          is_required={true}
-        />
-      </div>
-
-      {/* Custom Fields */}
-      {fields.length > 0 && (
-        <div className="mt-4 space-y-3">
-          <div className="border-t border-border pt-4">
-            <p className="text-sm font-medium text-muted-foreground mb-3">Custom Fields</p>
-            {fields.map((field, index) => (
-              <div key={field.id} className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
-                <TextInput
-                  name={`customFields.${index}.label`}
-                  placeholder="Field Name"
-                  label={index === 0 ? "Field Name" : ""}
-                />
-                <TextInput
-                  name={`customFields.${index}.value`}
-                  placeholder="Field Value"
-                  label={index === 0 ? "Field Value" : ""}
-                />
-                <div className={`flex items-${index === 0 ? 'end' : 'center'}`}>
-                  <Button
+        <div className="md:col-span-3">
+          {!customFieldsOpen && fields.length === 0 ? (
+            <button
+              type="button"
+              onClick={() => setCustomFieldsOpen(true)}
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+            >
+              <Plus className="w-4 h-4" /> Add Custom Fields
+            </button>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {fields.map((field, index) => (
+                <div key={field.id} className="flex items-end gap-3">
+                  <div className="w-48">
+                    <TextInput name={`customFields.${index}.label`} label={index === 0 ? "Field Label" : ""} placeholder="Field label" />
+                  </div>
+                  <div className="flex-1">
+                    <TextInput name={`customFields.${index}.value`} label={index === 0 ? "Value" : ""} placeholder="Enter value" />
+                  </div>
+                  <button
                     type="button"
-                    variant="ghost"
-                    size="icon"
                     onClick={() => remove(index)}
-                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                    className="text-muted-foreground hover:text-destructive mb-2"
+                    aria-label="Remove custom field"
                   >
                     <X className="w-4 h-4" />
-                  </Button>
+                  </button>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+              <button
+                type="button"
+                onClick={() => append(makeCustomField())}
+                className="self-start inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+              >
+                <Plus className="w-4 h-4" /> Add Custom Fields
+              </button>
+            </div>
+          )}
         </div>
-      )}
-
-      {/* Add Custom Field Button */}
-      <div className="mt-4">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={handleAddCustomField}
-          className="text-xs"
-        >
-          <Plus className="w-3 h-3 mr-1" />
-          Add Custom Field
-        </Button>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

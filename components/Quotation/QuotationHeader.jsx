@@ -1,94 +1,56 @@
 "use client";
 
-import React, { useState } from "react";
-import { useFormContext } from "react-hook-form";
-import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { useFormContext, useWatch } from "react-hook-form";
 import { Plus, X } from "lucide-react";
-import EditableTitle from "./EditableTitle";
-import LogoUploader from "./LogoUploader";
+import { TextInput, AvatarUpload } from "@/components/FormElements";
 
 export default function QuotationHeader() {
-  const { setValue, watch } = useFormContext();
-  const [showSubtitle, setShowSubtitle] = useState(false);
-
-  const title = watch("title") || "QUOTATION";
-  const subtitle = watch("subtitle") || "";
-  const logo = watch("logo");
-
-  const handleTitleChange = (newTitle) => {
-    setValue("title", newTitle, { shouldValidate: true });
-  };
-
-  const handleSubtitleChange = (newSubtitle) => {
-    setValue("subtitle", newSubtitle, { shouldValidate: true });
-  };
-
-  const handleLogoChange = (newLogo) => {
-    setValue("logo", newLogo, { shouldValidate: true });
-  };
-
-  const handleAddSubtitle = () => {
-    setShowSubtitle(true);
-    setTimeout(() => {
-      // Focus will be handled by EditableTitle component
-    }, 100);
-  };
-
-  const handleRemoveSubtitle = () => {
-    setValue("subtitle", "", { shouldValidate: true });
-    setShowSubtitle(false);
-  };
+  const { control } = useFormContext();
+  const [subtitleOpen, setSubtitleOpen] = useState(false);
+  const subtitle = useWatch({ control, name: "subtitle" });
+  const { setValue } = useFormContext();
 
   return (
-    <div className="bg-card rounded-xl border border-border p-8 shadow-sm mb-6">
-      <div className="flex items-start justify-between">
-        {/* Center Section - Title and Subtitle */}
-        <div className="flex-1 flex flex-col items-center justify-center">
-          {/* Main Title */}
-          <EditableTitle
-            value={title}
-            onChange={handleTitleChange}
-            placeholder="QUOTATION"
-            className="text-3xl font-bold tracking-wide"
-            editIconClassName="text-muted-foreground"
-          />
-
-          {/* Subtitle or Add Subtitle Button */}
-          {showSubtitle || subtitle ? (
-            <div className="mt-2 flex items-center gap-2">
-              <EditableTitle
-                value={subtitle}
-                onChange={handleSubtitleChange}
-                placeholder="Add subtitle..."
-                className="text-sm text-muted-foreground"
-              />
-              <button
-                type="button"
-                onClick={handleRemoveSubtitle}
-                className="text-muted-foreground hover:text-destructive transition-colors"
-              >
-                <X className="w-3 h-3" />
-              </button>
-            </div>
-          ) : (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={handleAddSubtitle}
-              className="mt-2 text-xs text-muted-foreground hover:text-primary"
-            >
-              <Plus className="w-3 h-3 mr-1" />
-              Add Subtitle
-            </Button>
-          )}
-        </div>
-
-        {/* Right Section - Logo */}
-        <div className="ml-8">
-          <LogoUploader value={logo} onChange={handleLogoChange} />
-        </div>
+    <div className="relative text-center pt-4 pb-6">
+      <div className="absolute right-0 top-0 w-28">
+        <AvatarUpload name="logo" label="" shape="square" size="lg" />
       </div>
+
+      <div className="max-w-sm mx-auto">
+        <TextInput
+          name="title"
+          label=""
+          placeholder="QUOTATION"
+          is_required
+          helperText="This appears as the document heading"
+        />
+      </div>
+
+      {subtitleOpen || subtitle ? (
+        <div className="max-w-sm mx-auto mt-2 relative">
+          <TextInput name="subtitle" label="" placeholder="Add a subtitle" />
+          <button
+            type="button"
+            onClick={() => {
+              setValue("subtitle", "");
+              setSubtitleOpen(false);
+            }}
+            className="absolute right-0 top-0 text-muted-foreground hover:text-destructive"
+            aria-label="Remove subtitle"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setSubtitleOpen(true)}
+          className="mt-2 inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+        >
+          <Plus className="w-4 h-4" /> Add Subtitle
+        </button>
+      )}
     </div>
   );
 }

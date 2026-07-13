@@ -1,66 +1,36 @@
 "use client";
 
-import React, { useState } from "react";
-import { TextInput, PhoneInput, TextareaInput } from "@/components/FormElements";
-import { ChevronDown, ChevronUp, Phone } from "lucide-react";
+import { useState } from "react";
+import { Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { TextInput, PhoneInput, TextareaInput } from "@/components/FormElements";
 
 export default function ContactDetails() {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  if (!open) {
+    return (
+      <Button type="button" variant="outline" className="border-dashed" onClick={() => setOpen(true)}>
+        <Phone className="w-4 h-4 mr-1.5" /> Add Contact Details
+      </Button>
+    );
+  }
 
   return (
-    <div className="bg-card rounded-xl border border-border p-6 shadow-sm">
-      <Button
-        type="button"
-        variant="ghost"
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between p-0 hover:bg-transparent"
-      >
-        <h3 className="text-base font-semibold flex items-center gap-2">
-          <Phone className="w-5 h-5 text-primary" />
-          Contact Details
-        </h3>
-        {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-      </Button>
-
-      {isExpanded && (
-        <div className="mt-4 space-y-4 border-t border-border pt-4 animate-in slide-in-from-top-2 duration-200">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <PhoneInput
-              name="contactDetails.phone"
-              label="Phone"
-              placeholder="Enter phone number"
-              defaultCountry="PK"
-            />
-            <PhoneInput
-              name="contactDetails.mobile"
-              label="Mobile"
-              placeholder="Enter mobile number"
-              defaultCountry="PK"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <TextInput
-              name="contactDetails.email"
-              label="Email"
-              placeholder="email@example.com"
-            />
-            <TextInput
-              name="contactDetails.website"
-              label="Website"
-              placeholder="www.example.com"
-            />
-          </div>
-
-          <TextareaInput
-            name="contactDetails.address"
-            label="Address"
-            placeholder="Enter contact address..."
-            rows={3}
-          />
+    <Card>
+      <CardHeader>
+        <CardTitle>Contact Details</CardTitle>
+      </CardHeader>
+      <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <PhoneInput name="contactDetails.phone" label="Phone" placeholder="+92 21 xxxxxxx" />
+        <PhoneInput name="contactDetails.mobile" label="Mobile" placeholder="+92 3xx xxxxxxx" />
+        <TextInput name="contactDetails.email" label="Email" placeholder="contact@example.com" />
+        <TextInput name="contactDetails.website" label="Website" placeholder="https://example.com" />
+        <div className="sm:col-span-2">
+          <TextareaInput name="contactDetails.address" label="Address" rows={2} placeholder="Office address" />
         </div>
-      )}
-    </div>
+      </CardContent>
+    </Card>
   );
 }
