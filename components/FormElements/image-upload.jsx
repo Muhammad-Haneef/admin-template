@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useCallback, useId } from "react";
 import { useFormContext, Controller } from "react-hook-form";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -17,16 +17,18 @@ function ImageUploadBase({
   value,
   onChange,
   onBlur,
-  id,
+  id: externalId,
   is_required,
   className,
   accept = "image/*",
   maxSize = 5 * 1024 * 1024, // 5MB
-  aspectRatio = "square", // "square", "video", "portrait", "landscape", "auto"
+  aspectRatio = "square",
   showPreview = true,
   allowZoom = true,
   ...props
 }) {
+  const generatedId = useId();
+  const inputId = externalId || generatedId;
   const fileInputRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
   const [imageError, setImageError] = useState(null);
@@ -37,10 +39,52 @@ function ImageUploadBase({
     video: "aspect-video",
     portrait: "aspect-[3/4]",
     landscape: "aspect-[4/3]",
-    auto: ""
+    auto: "",
   };
 
-  const handleDrag = (e) => {
+  // Process the selected file
+  const processFile = useCallback(
+    (file) => {
+      setImageError(null);
+
+      if (!file.type.startsWith("image/")) {
+        setImageError("Please select an image file");
+        return;
+      }
+
+      if (maxSize && file.size > maxSize) {
+        setImageError(
+          `Image size must be less than ${(maxSize / (1024 * 1024)).toFixed(1)}MB`
+        );
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        onChange?.(reader.result);
+      };
+      reader.readAsDataURL(file);
+    },
+    [maxSize, onChange]
+  );
+
+  const handleFiles = useCallback(
+    (fileList) => {
+      const file = fileList?.[0];
+      if (file) processFile(file);
+    },
+    [processFile]
+  );
+
+  const handleRemove = useCallback(() => {
+    onChange?.(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  }, [onChange]);
+
+  // Drag & drop handlers
+  const handleDrag = useCallback((e) => {
     e.preventDefault();
     e.stopPropagation();
     if (e.type === "dragenter" || e.type === "dragover") {
@@ -48,62 +92,45 @@ function ImageUploadBase({
     } else if (e.type === "dragleave") {
       setIsDragging(false);
     }
-  };
+  }, []);
 
-  const handleDrop = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-    const file = e.dataTransfer?.files?.[0];
-    if (file) handleFile(file);
-  };
-
-  const handleFileChange = (e) => {
-    const file = e.target.files?.[0];
-    if (file) handleFile(file);
-  };
-
-  const handleFile = (file) => {
-    setImageError(null);
-
-    if (!file.type.startsWith("image/")) {
-      setImageError("Please select an image file");
-      return;
-    }
-
-    if (maxSize && file.size > maxSize) {
-      setImageError(`Image size must be less than ${(maxSize / (1024 * 1024)).toFixed(1)}MB`);
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      onChange?.(reader.result);
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleRemove = () => {
-    onChange?.(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  };
+  const handleDrop = useCallback(
+    (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDragging(false);
+      const files = e.dataTransfer?.files;
+      if (files) handleFiles(files);
+    },
+    [handleFiles]
+  );
 
   const displayError = error || imageError;
 
   return (
     <div className={cn("w-full flex flex-col gap-2", className)}>
       {label && (
-        <Label className={cn("text-sm font-medium", displayError && "text-destructive", disabled && "opacity-50")}>
+        <Label
+          className={cn(
+            "text-sm font-medium",
+            displayError && "text-destructive",
+            disabled && "opacity-50"
+          )}
+        >
           {label}
           {is_required && <span className="text-destructive ml-1">*</span>}
         </Label>
       )}
 
       {value ? (
+        /* ---------- PREVIEW STATE ---------- */
         <div className="space-y-2">
-          <div className={cn("relative rounded-lg overflow-hidden border-2 border-border group cursor-pointer", aspectRatioClasses[aspectRatio] || "aspect-square")}>
+          <div
+            className={cn(
+              "relative rounded-lg overflow-hidden border-2 border-border group cursor-pointer",
+              aspectRatioClasses[aspectRatio] || "aspect-square"
+            )}
+          >
             <img
               src={value}
               alt="Preview"
@@ -130,6 +157,7 @@ function ImageUploadBase({
                 variant="secondary"
                 onClick={(e) => {
                   e.stopPropagation();
+                  // Direct click works because input is not display:none
                   fileInputRef.current?.click();
                 }}
                 disabled={disabled}
@@ -154,12 +182,22 @@ function ImageUploadBase({
           </div>
         </div>
       ) : (
-        <div
+        /* ---------- EMPTY DROP ZONE (label triggers hidden input) ---------- */
+        <label
+          htmlFor={inputId}
           onDragEnter={handleDrag}
           onDragLeave={handleDrag}
           onDragOver={handleDrag}
           onDrop={handleDrop}
-          onClick={() => !disabled && fileInputRef.current?.click()}
+          tabIndex={disabled ? -1 : 0}
+          onKeyDown={(e) => {
+            if (disabled) return;
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              // Label's default behavior will open file dialog
+              fileInputRef.current?.click();
+            }
+          }}
           className={cn(
             "relative flex flex-col items-center justify-center rounded-lg border-2 border-dashed transition-all cursor-pointer",
             aspectRatioClasses[aspectRatio] || "aspect-square",
@@ -170,28 +208,44 @@ function ImageUploadBase({
             disabled && "opacity-50 cursor-not-allowed pointer-events-none"
           )}
         >
-          <Upload className={cn("w-10 h-10 mb-2", isDragging ? "text-primary" : "text-muted-foreground")} />
+          <Upload
+            className={cn(
+              "w-10 h-10 mb-2",
+              isDragging ? "text-primary" : "text-muted-foreground"
+            )}
+          />
           <p className="text-sm font-medium text-foreground mb-1">
             {isDragging ? "Drop image here" : "Click to upload or drag & drop"}
           </p>
           <p className="text-xs text-muted-foreground">
             {accept} • Max {(maxSize / (1024 * 1024)).toFixed(1)}MB
           </p>
-        </div>
+        </label>
       )}
 
+      {/* HIDDEN FILE INPUT – now not display:none, so it works everywhere */}
       <input
         ref={fileInputRef}
+        id={inputId}
         type="file"
         accept={accept}
-        onChange={handleFileChange}
         disabled={disabled}
-        className="hidden"
+        className="absolute w-0 h-0 opacity-0 overflow-hidden"
+        onChange={(e) => {
+          handleFiles(e.target.files);
+          e.target.value = ""; // allow re-uploading the same file
+        }}
+        aria-hidden="true"
         {...props}
       />
 
       {(helperText || displayError) && (
-        <p className={cn("text-xs", displayError ? "text-destructive" : "text-muted-foreground")}>
+        <p
+          className={cn(
+            "text-xs",
+            displayError ? "text-destructive" : "text-muted-foreground"
+          )}
+        >
           {displayError || helperText}
         </p>
       )}

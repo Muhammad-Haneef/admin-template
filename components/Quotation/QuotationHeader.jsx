@@ -13,10 +13,6 @@ export default function QuotationHeader() {
 
   return (
     <div className="relative text-center pt-4 pb-6">
-      <div className="absolute right-0 top-0 w-28">
-        <AvatarUpload name="logo" label="" shape="square" size="lg" />
-      </div>
-
       <div className="max-w-sm mx-auto">
         <TextInput
           name="title"

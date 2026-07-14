@@ -14,7 +14,7 @@ export default function AttachmentUploader() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <FileUpload name="attachments" label="" multiple maxSize={10} helperText="PDF, DOC, XLS, or images (Max 10MB each)" />
+        <FileUpload name="attachments" label="" multiple maxFiles={10} helperText="PDF, DOC, XLS, or images (Max 10MB each)" />
       </CardContent>
     </Card>
   );

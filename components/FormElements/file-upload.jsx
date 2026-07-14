@@ -1,147 +1,243 @@
 "use client";
 
 import * as React from "react";
-import { useState, useId, useRef } from "react";
+import { useId, useState, useEffect, useCallback } from "react";
 import { useFormContext, Controller } from "react-hook-form";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { HelpCircle, Upload, X, File, Image, FileText, FileVideo } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  HelpCircle,
+  Upload,
+  X,
+  File,
+  Image as ImageIcon,
+  FileText,
+  FileVideo,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const getFileIcon = (file) => {
-  const type = file.type || "";
-  if (type.startsWith("image/")) return <Image className="h-4 w-4" />;
+  const type = file?.type || "";
+  if (type.startsWith("image/")) return <ImageIcon className="h-4 w-4" />;
   if (type.startsWith("video/")) return <FileVideo className="h-4 w-4" />;
   if (type.includes("pdf")) return <FileText className="h-4 w-4" />;
   return <File className="h-4 w-4" />;
 };
 
 const formatSize = (bytes) => {
+  if (!bytes) return "0 B";
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 };
 
 function FileUploadBase({
-  label, error, helperText, tooltip, disabled, id, is_required,
-  value = [], onChange, onBlur, multiple = false, accept, maxSize, maxFiles,
-  dir = "ltr", className, ...props
+  label,
+  error,
+  helperText,
+  tooltip,
+  disabled,
+  id,
+  is_required,
+  value = [],
+  onChange,
+  multiple = false,
+  accept,
+  maxSize,
+  maxFiles,
+  dir = "ltr",
+  className,
+  ...props
 }) {
-  const generatedId = useId();
-  const inputId = id || generatedId;
-  const dropRef = useRef(null);
-  const fileInputRef = useRef(null);
+  const inputId = id || useId();
   const [isDragging, setIsDragging] = useState(false);
-  const [fileError, setFileError] = useState(null);
+  const [fileError, setFileError] = useState("");
+
   const files = Array.isArray(value) ? value : value ? [value] : [];
 
-  const handleFiles = (newFiles) => {
-    if (disabled) return;
-    setFileError(null);
-    let validFiles = Array.from(newFiles);
+  const [previews, setPreviews] = useState([]);
 
-    if (maxSize) {
-      const oversized = validFiles.filter((f) => f.size > maxSize);
-      if (oversized.length > 0) {
-        setFileError(`File size exceeds ${formatSize(maxSize)} limit.`);
+  useEffect(() => {
+    const urls = files.map((file) =>
+      file?.type?.startsWith("image/") ? URL.createObjectURL(file) : null
+    );
+    setPreviews(urls);
+    return () => {
+      urls.forEach((url) => {
+        if (url) URL.revokeObjectURL(url);
+      });
+    };
+  }, [files]);
+
+  const handleFiles = useCallback(
+    (fileList) => {
+      if (disabled) return;
+      setFileError("");
+
+      const newFiles = Array.from(fileList);
+
+      if (maxSize) {
+        const invalid = newFiles.find((f) => f.size > maxSize);
+        if (invalid) {
+          setFileError(`Maximum size is ${formatSize(maxSize)}.`);
+          return;
+        }
+      }
+
+      if (maxFiles && files.length + newFiles.length > maxFiles) {
+        setFileError(`Maximum ${maxFiles} files allowed.`);
         return;
       }
-    }
 
-    if (maxFiles && files.length + validFiles.length > maxFiles) {
-      setFileError(`Maximum ${maxFiles} file${maxFiles > 1 ? "s" : ""} allowed.`);
-      return;
-    }
+      const updated = multiple ? [...files, ...newFiles] : [newFiles[0]];
+      onChange?.(updated);
+    },
+    [disabled, maxSize, maxFiles, files, multiple, onChange]
+  );
 
-    const updated = multiple ? [...files, ...validFiles] : validFiles.slice(0, 1);
-    if (onChange) onChange(updated);
-  };
+  const removeFile = useCallback(
+    (index) => {
+      const updated = files.filter((_, i) => i !== index);
+      onChange?.(updated);
+    },
+    [files, onChange]
+  );
 
-  const handleDrop = (e) => {
+  const handleDrag = useCallback((e) => {
     e.preventDefault();
-    setIsDragging(false);
-    if (disabled) return;
-    handleFiles(e.dataTransfer.files);
-  };
+    e.stopPropagation();
+    if (e.type === "dragover") {
+      setIsDragging(true);
+    } else if (e.type === "dragleave") {
+      setIsDragging(false);
+    }
+  }, []);
 
-  const handleRemove = (index) => {
-    const updated = files.filter((_, i) => i !== index);
-    if (onChange) onChange(updated);
-  };
+  const handleDrop = useCallback(
+    (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDragging(false);
+      handleFiles(e.dataTransfer.files);
+    },
+    [handleFiles]
+  );
 
   const displayError = error || fileError;
 
   return (
-    <div className={cn("w-full flex flex-col gap-1.5", className)} dir={dir}>
+    <div className={cn("w-full flex flex-col gap-2", className)} dir={dir}>
       {label && (
-        <div className="flex items-center gap-1.5">
-          <Label htmlFor={inputId} className={cn("text-xs font-semibold uppercase tracking-wider text-muted-foreground", displayError && "text-destructive", disabled && "opacity-50")}>
-            {label}{is_required && <span className="text-destructive ml-1">*</span>}
+        <div className="flex items-center gap-2">
+          <Label
+            htmlFor={inputId}
+            className="text-xs font-semibold uppercase tracking-wide"
+          >
+            {label}
+            {is_required && <span className="text-destructive ml-1">*</span>}
           </Label>
           {tooltip && (
             <TooltipProvider>
-              <Tooltip delayDuration={300}>
-                <TooltipTrigger asChild><HelpCircle className="h-3.5 w-3.5 text-muted-foreground/75 cursor-pointer hover:text-foreground" /></TooltipTrigger>
-                <TooltipContent><p className="max-w-xs text-xs">{tooltip}</p></TooltipContent>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <HelpCircle className="h-4 w-4 cursor-pointer text-muted-foreground" />
+                </TooltipTrigger>
+                <TooltipContent>{tooltip}</TooltipContent>
               </Tooltip>
             </TooltipProvider>
           )}
         </div>
       )}
 
+      {/* Hidden file input – NOT display:none, so label triggers work reliably */}
       <input
-        ref={fileInputRef}
-        type="file"
         id={inputId}
+        type="file"
         accept={accept}
         multiple={multiple}
         disabled={disabled}
-        className="hidden"
-        onChange={(e) => { if (e.target.files) { handleFiles(e.target.files); e.target.value = ""; } }}
+        className="absolute w-0 h-0 opacity-0 overflow-hidden"
+        onChange={(e) => {
+          if (e.target.files?.length) {
+            handleFiles(e.target.files);
+          }
+          e.target.value = ""; // allow re-upload of the same file
+        }}
+        aria-hidden="true"
         {...props}
       />
 
-      <div
-        ref={dropRef}
-        onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-        onDragLeave={() => setIsDragging(false)}
+      <label
+        htmlFor={inputId}
+        onDragOver={handleDrag}
+        onDragLeave={handleDrag}
         onDrop={handleDrop}
-        onClick={() => !disabled && fileInputRef.current?.click()}
+        // Keyboard support
+        tabIndex={disabled ? -1 : 0}
+        onKeyDown={(e) => {
+          if (disabled) return;
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            // The label's htmlFor will trigger the input
+            document.getElementById(inputId)?.click();
+          }
+        }}
         className={cn(
-          "relative flex flex-col items-center justify-center gap-2 w-full h-28 rounded-lg border-2 border-dashed border-input transition-all cursor-pointer",
-          "hover:border-ring hover:bg-accent/30",
-          isDragging && "border-ring bg-accent/40 scale-[1.01]",
-          displayError && "border-destructive hover:border-destructive/80",
-          disabled && "opacity-50 cursor-not-allowed pointer-events-none"
+          "flex h-32 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed transition",
+          isDragging && "border-primary bg-muted",
+          displayError && "border-destructive",
+          disabled && "pointer-events-none opacity-50"
         )}
       >
-        <div className={cn("p-2.5 rounded-full border border-input bg-muted transition-all", isDragging && "bg-accent border-ring")}>
-          <Upload className={cn("h-5 w-5 text-muted-foreground", isDragging && "text-foreground")} />
-        </div>
-        <div className="flex flex-col items-center gap-0.5">
-          <span className="text-sm font-medium text-foreground">{isDragging ? "Drop to upload" : "Click to upload or drag & drop"}</span>
-          <span className="text-xs text-muted-foreground">
-            {accept ? `Accepted: ${accept}` : "Any file format"}
-            {maxSize && ` · Max ${formatSize(maxSize)}`}
-            {maxFiles && ` · Max ${maxFiles} file${maxFiles > 1 ? "s" : ""}`}
-          </span>
-        </div>
-      </div>
+        <Upload className="mb-2 h-6 w-6" />
+        <p className="font-medium">
+          {isDragging ? "Drop files here" : "Click to upload or drag & drop"}
+        </p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          {accept || "Any file"}
+          {maxSize && ` • Max ${formatSize(maxSize)}`}
+          {maxFiles && ` • ${maxFiles} files`}
+        </p>
+      </label>
 
       {files.length > 0 && (
-        <div className="flex flex-col gap-1.5 mt-1">
+        <div className="space-y-2">
           {files.map((file, index) => (
-            <div key={index} className="flex items-center gap-2.5 px-3 py-2 rounded-lg border border-input bg-background group hover:bg-accent/30 transition-colors">
-              <span className="text-muted-foreground shrink-0">{getFileIcon(file)}</span>
-              <div className="flex flex-col flex-1 overflow-hidden">
-                <span className="text-xs font-medium text-foreground truncate">{file.name}</span>
-                <span className="text-[10px] text-muted-foreground">{formatSize(file.size)}</span>
+            <div
+              key={index}
+              className="flex items-center gap-3 rounded-md border p-2"
+            >
+              {previews[index] ? (
+                <img
+                  src={previews[index]}
+                  alt={file.name}
+                  className="h-14 w-14 rounded object-cover"
+                />
+              ) : (
+                <div className="flex h-14 w-14 items-center justify-center rounded bg-muted">
+                  {getFileIcon(file)}
+                </div>
+              )}
+              <div className="flex-1 overflow-hidden">
+                <p className="truncate text-sm font-medium">{file.name}</p>
+                <p className="text-xs text-muted-foreground">
+                  {formatSize(file.size)}
+                </p>
               </div>
               {!disabled && (
-                <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                  onClick={(e) => { e.stopPropagation(); handleRemove(index); }}>
-                  <X className="h-3.5 w-3.5" />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => removeFile(index)}
+                >
+                  <X className="h-4 w-4" />
                 </Button>
               )}
             </div>
@@ -150,25 +246,38 @@ function FileUploadBase({
       )}
 
       {(helperText || displayError) && (
-        <div className="text-[11px] px-0.5">
-          {displayError ? <span className="text-destructive font-medium animate-in fade-in-50 slide-in-from-top-1 duration-200">{displayError}</span>
-            : <span className="text-muted-foreground">{helperText}</span>}
-        </div>
+        <p
+          className={cn(
+            "text-xs",
+            displayError ? "text-destructive" : "text-muted-foreground"
+          )}
+        >
+          {displayError || helperText}
+        </p>
       )}
     </div>
   );
 }
 
 export default function FileUpload({ name, ...props }) {
-  const formContext = useFormContext();
-  if (formContext && name) {
+  const form = useFormContext();
+
+  if (form && name) {
     return (
-      <Controller name={name} control={formContext.control}
-        render={({ field, fieldState: { error } }) => (
-          <FileUploadBase {...field} error={error?.message || props.error} {...props} />
+      <Controller
+        name={name}
+        control={form.control}
+        render={({ field, fieldState }) => (
+          <FileUploadBase
+            {...props}
+            value={field.value}
+            onChange={field.onChange}
+            error={fieldState.error?.message}
+          />
         )}
       />
     );
   }
+
   return <FileUploadBase {...props} />;
 }
