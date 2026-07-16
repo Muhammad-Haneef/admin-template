@@ -7,12 +7,11 @@ import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
-import { Icon } from "@iconify/react";
 import { HelpCircle, ChevronDown, X, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 function MultiSelectInputBase({
-  label, icon, iconComponent: IconComponent, error, helperText, tooltip,
+  label, icon: IconComponent, error, helperText, tooltip,
   disabled, loading = false, placeholder = "Select options...", options = [],
   value = [], onChange, onBlur, id, is_required, clearable = true,
   searchable = true, onCreate, dir = "ltr", className, ...props

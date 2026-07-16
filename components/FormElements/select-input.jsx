@@ -7,12 +7,11 @@ import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { Icon } from "@iconify/react";
 import { HelpCircle, ChevronDown, Check, X, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 function SelectInputBase({
-  label, icon, iconComponent: IconComponent, error, helperText, tooltip,
+  label, icon: IconComponent, error, helperText, tooltip,
   disabled, loading = false, placeholder = "Select an option...", options = [],
   value, onChange, onBlur, id, is_required, clearable = true, searchable = true,
   onCreate, optionEnd, dir = "ltr", className, ...props
@@ -85,7 +84,7 @@ function SelectInputBase({
             {...props}
           >
             <div className="flex items-center gap-2 overflow-hidden truncate">
-              {icon && !isRTL && (IconComponent ? <IconComponent className="h-4 w-4 shrink-0 text-muted-foreground" /> : <Icon icon={icon} className="h-4 w-4 shrink-0 text-muted-foreground" />)}
+              {IconComponent && !isRTL && <IconComponent className="h-4 w-4 shrink-0 text-muted-foreground" />}
               <span className="truncate">{selectedOption ? selectedOption.label : placeholder}</span>
             </div>
             <div className="flex items-center gap-1 shrink-0 ml-auto">

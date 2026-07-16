@@ -6,14 +6,12 @@ import { useFormContext, Controller } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Icon } from "@iconify/react";
 import { HelpCircle, ChevronUp, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 function NumberInputBase({
   label,
-  icon,
-  iconComponent: IconComponent,
+  icon: IconComponent,
   error,
   helperText,
   tooltip,
@@ -146,9 +144,9 @@ function NumberInputBase({
         displayError && "border-destructive focus-within:ring-destructive/20"
       )}>
         {/* Input Left Icon */}
-        {icon && !isRTL && (
+        {IconComponent && !isRTL && (
           <div className="pl-3 flex items-center justify-center text-muted-foreground/70 pointer-events-none">
-            {IconComponent ? <IconComponent className="h-4 w-4" /> : <Icon icon={icon} className="h-4 w-4" />}
+            <IconComponent className="h-4 w-4" />
           </div>
         )}
 
@@ -162,8 +160,8 @@ function NumberInputBase({
           disabled={disabled}
           className={cn(
             "flex-1 min-w-0 bg-transparent py-1.5 px-3 text-sm outline-none",
-            icon && !isRTL && "pl-2",
-            icon && isRTL && "pr-2",
+            IconComponent && !isRTL && "pl-2",
+            IconComponent && isRTL && "pr-2",
             isRTL && "text-right",
             disabled && "cursor-not-allowed opacity-50"
           )}
@@ -171,9 +169,9 @@ function NumberInputBase({
         />
 
         {/* Input Right Icon (RTL) */}
-        {icon && isRTL && (
+        {IconComponent && isRTL && (
           <div className="pr-3 flex items-center justify-center text-muted-foreground/70 pointer-events-none">
-            {IconComponent ? <IconComponent className="h-4 w-4" /> : <Icon icon={icon} className="h-4 w-4" />}
+            <IconComponent className="h-4 w-4" />
           </div>
         )}
 

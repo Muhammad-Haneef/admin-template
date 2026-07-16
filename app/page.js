@@ -3,7 +3,6 @@
 import React from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AdminLayout } from "@/components/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Save, FileText, Loader2 } from "lucide-react";
 import { generateQuotationNumber } from "@/lib/quotation-utils";
@@ -196,145 +195,143 @@ export default function QuotationBuilderPage() {
   }, [methods]);
 
   return (
-    <AdminLayout>
-      <div className="min-h-screen bg-background p-6">
-        <FormProvider {...methods}>
-          <form onSubmit={methods.handleSubmit(onSubmit, onInvalid)} className="max-w-[1600px] mx-auto">
-            {/* Header */}
-            <QuotationHeader />
+    <div className="min-h-screen bg-background p-6">
+      <FormProvider {...methods}>
+        <form onSubmit={methods.handleSubmit(onSubmit, onInvalid)} className="max-w-[1600px] mx-auto">
+          {/* Header */}
+          <QuotationHeader />
 
-            {/* Quotation Information */}
-            <div className="mb-6">
-              <QuotationMetaCard />
+          {/* Quotation Information */}
+          <div className="mb-6">
+            <QuotationMetaCard />
+          </div>
+
+          {/* Company & Client - Side by Side */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <CompanySelector />
+            <ClientSelector />
+          </div>
+
+          {/* Shipping Details */}
+          <div className="mb-6">
+            <ShippingDetails />
+          </div>
+
+          {/* Currency & Configuration */}
+          <div className="mb-6">
+            <CurrencySelector />
+          </div>
+
+          {/* Main Content - Items Table & Summary Sidebar */}
+          <div className="mb-6">
+            {/* Items Table - Takes 2/3 width on large screens */}
+            <div>
+              <QuotationItemsTable />
+              {formState.errors?.items?.message && (
+                <p className="text-sm text-destructive mt-2">{formState.errors.items.message}</p>
+              )}
             </div>
 
-            {/* Company & Client - Side by Side */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-              <CompanySelector />
-              <ClientSelector />
-            </div>
+          </div>
+          {/* Summary Sidebar - Takes 1/3 width on large screens */}
+          <div className="ml-auto w-1/3">
+            <SummarySidebar />
+          </div>
 
-            {/* Shipping Details */}
-            <div className="mb-6">
-              <ShippingDetails />
-            </div>
+          {/* Contact Details */}
+          <div className="mb-6">
+            <ContactDetails />
+          </div>
 
-            {/* Currency & Configuration */}
-            <div className="mb-6">
-              <CurrencySelector />
-            </div>
+          {/* Terms & Conditions */}
+          <div className="mb-6">
+            <TermsBuilder />
+          </div>
 
-            {/* Main Content - Items Table & Summary Sidebar */}
-            <div className="mb-6">
-              {/* Items Table - Takes 2/3 width on large screens */}
-              <div>
-                <QuotationItemsTable />
-                {formState.errors?.items?.message && (
-                  <p className="text-sm text-destructive mt-2">{formState.errors.items.message}</p>
+          {/* Attachments */}
+          <div className="mb-6">
+            <AttachmentUploader />
+          </div>
+
+          {/* Additional Notes */}
+          <div className="mb-6">
+            <AdditionalNotes />
+          </div>
+
+          {/* Additional Info */}
+          <div className="mb-6">
+            <AdditionalInfo />
+          </div>
+
+          {/* Advanced Options */}
+          <div className="mb-6">
+            <AdvancedOptions />
+          </div>
+
+          {/* Footer Action Buttons - Sticky */}
+          <div className="sticky bottom-0 bg-background border-t border-border py-4 mt-8 -mx-6 px-6 z-10 shadow-lg">
+            <div className="max-w-[1600px] mx-auto flex flex-wrap gap-3 justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleSaveDraft}
+                disabled={isSavingDraft || isSubmitting}
+                className="min-w-[140px]"
+              >
+                {isSavingDraft ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <FileText className="w-4 h-4 mr-2" />
+                    Save as Draft
+                  </>
                 )}
-              </div>
+              </Button>
 
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleSaveAndCreateNew}
+                disabled={isSubmitting || isSavingDraft}
+                className="min-w-[180px]"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4 mr-2" />
+                    Save & Create New
+                  </>
+                )}
+              </Button>
+
+              <Button
+                type="submit"
+                disabled={isSubmitting || isSavingDraft}
+                className="min-w-[160px] bg-primary hover:bg-primary/90"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4 mr-2" />
+                    Save & Continue
+                  </>
+                )}
+              </Button>
             </div>
-            {/* Summary Sidebar - Takes 1/3 width on large screens */}
-            <div className="ml-auto w-1/3">
-              <SummarySidebar />
-            </div>
-
-            {/* Contact Details */}
-            <div className="mb-6">
-              <ContactDetails />
-            </div>
-
-            {/* Terms & Conditions */}
-            <div className="mb-6">
-              <TermsBuilder />
-            </div>
-
-            {/* Attachments */}
-            <div className="mb-6">
-              <AttachmentUploader />
-            </div>
-
-            {/* Additional Notes */}
-            <div className="mb-6">
-              <AdditionalNotes />
-            </div>
-
-            {/* Additional Info */}
-            <div className="mb-6">
-              <AdditionalInfo />
-            </div>
-
-            {/* Advanced Options */}
-            <div className="mb-6">
-              <AdvancedOptions />
-            </div>
-
-            {/* Footer Action Buttons - Sticky */}
-            <div className="sticky bottom-0 bg-background border-t border-border py-4 mt-8 -mx-6 px-6 z-10 shadow-lg">
-              <div className="max-w-[1600px] mx-auto flex flex-wrap gap-3 justify-end">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleSaveDraft}
-                  disabled={isSavingDraft || isSubmitting}
-                  className="min-w-[140px]"
-                >
-                  {isSavingDraft ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <FileText className="w-4 h-4 mr-2" />
-                      Save as Draft
-                    </>
-                  )}
-                </Button>
-
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleSaveAndCreateNew}
-                  disabled={isSubmitting || isSavingDraft}
-                  className="min-w-[180px]"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="w-4 h-4 mr-2" />
-                      Save & Create New
-                    </>
-                  )}
-                </Button>
-
-                <Button
-                  type="submit"
-                  disabled={isSubmitting || isSavingDraft}
-                  className="min-w-[160px] bg-primary hover:bg-primary/90"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Creating...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="w-4 h-4 mr-2" />
-                      Save & Continue
-                    </>
-                  )}
-                </Button>
-              </div>
-            </div>
-          </form>
-        </FormProvider>
-      </div>
-    </AdminLayout>
+          </div>
+        </form>
+      </FormProvider>
+    </div>
   );
 }

@@ -6,12 +6,11 @@ import { useFormContext, Controller } from "react-hook-form";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Icon } from "@iconify/react";
 import { HelpCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 function CheckboxInputBase({
-  title, label, icon, iconComponent: IconComponent, error, helperText, tooltip,
+  title, label, icon: IconComponent, error, helperText, tooltip,
   disabled, id, is_required, checked, onChange, arrayMode = false, className, ...props
 }) {
   const generatedId = useId();
@@ -40,7 +39,6 @@ function CheckboxInputBase({
                 error && "text-destructive"
               )}
             >
-              {icon && !IconComponent && <Icon icon={icon} className="h-4 w-4 inline mr-1.5 align-text-bottom text-muted-foreground" />}
               {IconComponent && <IconComponent className="h-4 w-4 inline mr-1.5 align-text-bottom text-muted-foreground" />}
               {displayLabel}
               {is_required && <span className="text-destructive ml-1">*</span>}

@@ -6,12 +6,11 @@ import { useFormContext, Controller } from "react-hook-form";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Icon } from "@iconify/react";
 import { HelpCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 function SwitchInputBase({
-  label, icon, iconComponent: IconComponent, error, helperText, tooltip,
+  label, icon: IconComponent, error, helperText, tooltip,
   disabled = false, checked = false, onChange, onBlur, id, is_required,
   showStatusLabel = false, statusLabels = { on: "On", off: "Off" }, className, ...props
 }) {
@@ -27,7 +26,6 @@ function SwitchInputBase({
     <div className={cn("flex flex-col gap-1", className)}>
       <div className="flex items-center justify-between gap-4 py-0.5">
         <div className="flex items-center gap-2">
-          {icon && !IconComponent && <Icon icon={icon} className="h-4 w-4 text-muted-foreground shrink-0" />}
           {IconComponent && <IconComponent className="h-4 w-4 text-muted-foreground shrink-0" />}
           {label && (
             <div className="flex items-center gap-1.5">

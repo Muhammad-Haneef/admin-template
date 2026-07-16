@@ -8,7 +8,6 @@ import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { Icon } from "@iconify/react";
 import { HelpCircle, ChevronDown, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 

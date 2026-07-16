@@ -6,7 +6,6 @@ import { useFormContext, Controller } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Icon } from "@iconify/react";
 import { HelpCircle, Eye, EyeOff, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -38,8 +37,7 @@ const getPasswordStrength = (pass) => {
 
 function PasswordInputBase({
   label,
-  icon,
-  iconComponent: IconComponent,
+  icon: IconComponent,
   error,
   helperText,
   tooltip,
@@ -117,8 +115,6 @@ function PasswordInputBase({
           <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/70 pointer-events-none">
             {IconComponent ? (
               <IconComponent className="h-4 w-4" />
-            ) : icon ? (
-              <Icon icon={icon} className="h-4 w-4" />
             ) : (
               <Lock className="h-4 w-4" />
             )}

@@ -6,7 +6,6 @@ import { useFormContext, Controller } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Icon } from "@iconify/react";
 import { HelpCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -119,8 +118,7 @@ const validateInputText = ({
 function TextInputBase({
   label,
   type = "text",
-  icon,
-  iconComponent: IconComponent,
+  icon: IconComponent,
   error,
   helperText,
   tooltip,
@@ -226,16 +224,16 @@ function TextInputBase({
       {/* Input container */}
       <div className="relative w-full">
         {/* Input Left Icon */}
-        {icon && !isRTL && (
+        {IconComponent && !isRTL && (
           <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/70 pointer-events-none">
-            {IconComponent ? <IconComponent className="h-4 w-4" /> : <Icon icon={icon} className="h-4 w-4" />}
+            <IconComponent className="h-4 w-4" />
           </div>
         )}
 
         {/* Input Right Icon (RTL) */}
-        {icon && isRTL && (
+        {IconComponent && isRTL && (
           <div className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/70 pointer-events-none">
-            {IconComponent ? <IconComponent className="h-4 w-4" /> : <Icon icon={icon} className="h-4 w-4" />}
+            <IconComponent className="h-4 w-4" />
           </div>
         )}
 
@@ -251,7 +249,7 @@ function TextInputBase({
           maxLength={maxLength}
           className={cn(
             "w-full h-9 rounded-lg border border-input bg-background text-sm transition-shadow",
-            icon && (isRTL ? "pr-9" : "pl-9"),
+            IconComponent && (isRTL ? "pr-9" : "pl-9"),
             displayError && "border-destructive focus-visible:ring-destructive/20",
             isRTL && "text-right"
           )}
