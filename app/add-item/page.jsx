@@ -56,23 +56,23 @@ const LEDGER_OPTIONS = [
 ];
 
 const CURRENCY_OPTIONS = [
-  { label: "Pakistani Rupee (PKR, PKRs)", value: "PKR" },
-  { label: "US Dollar (USD, $)", value: "USD" },
-  { label: "UAE Dirham (AED, د.إ)", value: "AED" },
-  { label: "Saudi Riyal (SAR, ر.س)", value: "SAR" },
+  { id: "PKR", title: "Pakistani Rupee (PKR, PKRs)" },
+  { id: "USD", title: "US Dollar (USD, $)" },
+  { id: "AED", title: "UAE Dirham (AED, د.إ)" },
+  { id: "SAR", title: "Saudi Riyal (SAR, ر.س)" },
 ];
 
 const WAREHOUSE_OPTIONS = [
-  { label: "Main Warehouse - Karachi", value: "wh-khi" },
-  { label: "North Warehouse - Lahore", value: "wh-lhr" },
-  { label: "Retail Store - Islamabad", value: "wh-isb" },
+  { id: "wh-khi", title: "Main Warehouse - Karachi" },
+  { id: "wh-lhr", title: "North Warehouse - Lahore" },
+  { id: "wh-isb", title: "Retail Store - Islamabad" },
 ];
 
 const TRACKING_METHOD_OPTIONS = [
-  { label: "None", value: "none" },
-  { label: "Batchwise", value: "batchwise", disabled: true, icon: <Lock className="h-3 w-3 text-muted-foreground" /> },
-  { label: "Serial No.", value: "serial", disabled: true, icon: <Lock className="h-3 w-3 text-muted-foreground" /> },
-  { label: "Batch + Serial No.", value: "batch-serial", disabled: true, icon: <Lock className="h-3 w-3 text-muted-foreground" /> },
+  { id: "none", title: "None" },
+  { id: "batchwise", title: "Batchwise", disabled: true, icon: <Lock className="h-3 w-3 text-muted-foreground" /> },
+  { id: "serial", title: "Serial No.", disabled: true, icon: <Lock className="h-3 w-3 text-muted-foreground" /> },
+  { id: "batch-serial", title: "Batch + Serial No.", disabled: true, icon: <Lock className="h-3 w-3 text-muted-foreground" /> },
 ];
 
 const DECIMAL_OPTIONS = [

@@ -5,7 +5,7 @@ import { useFormContext } from "react-hook-form";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { InfoCircledIcon, Cross2Icon, MagnifyingGlassIcon } from "@radix-ui/react-icons";
+import { Info, X, Search } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -98,7 +98,7 @@ export default function ColorSwatchPicker({
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <InfoCircledIcon className="h-4 w-4 text-muted-foreground cursor-help" />
+                  <Info className="h-4 w-4 text-muted-foreground cursor-help" />
                 </TooltipTrigger>
                 <TooltipContent>
                   <p className="text-xs max-w-xs">{tooltip}</p>
@@ -130,7 +130,7 @@ export default function ColorSwatchPicker({
                     onClick={handleClear}
                     className="hover:text-destructive"
                   >
-                    <Cross2Icon className="h-4 w-4" />
+                    <X className="h-4 w-4" />
                   </button>
                 )}
               </>
@@ -145,7 +145,7 @@ export default function ColorSwatchPicker({
         <PopoverContent className="w-[320px] p-0" align="start">
           <div className="p-3 border-b">
             <div className="relative">
-              <MagnifyingGlassIcon className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search colors..."
                 value={searchQuery}

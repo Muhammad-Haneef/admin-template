@@ -22,15 +22,15 @@ function SelectInputBase({
   const [searchTerm, setSearchTerm] = useState("");
 
   const normalizedOptions = useMemo(() => Array.isArray(options) ? options : [], [options]);
-  const selectedOption = useMemo(() => normalizedOptions.find((opt) => String(opt.value) === String(value)), [value, normalizedOptions]);
+  const selectedOption = useMemo(() => normalizedOptions.find((opt) => String(opt.id) === String(value)), [value, normalizedOptions]);
   const filteredOptions = useMemo(() => {
     if (!searchTerm) return normalizedOptions;
-    return normalizedOptions.filter((opt) => String(opt.label).toLowerCase().includes(searchTerm.toLowerCase()));
+    return normalizedOptions.filter((opt) => String(opt.title).toLowerCase().includes(searchTerm.toLowerCase()));
   }, [searchTerm, normalizedOptions]);
 
   const handleSelect = (option) => {
     if (disabled || loading) return;
-    if (onChange) onChange(option.value);
+    if (onChange) onChange(option.id);
     setIsOpen(false);
     setSearchTerm("");
   };
@@ -85,7 +85,7 @@ function SelectInputBase({
           >
             <div className="flex items-center gap-2 overflow-hidden truncate">
               {IconComponent && !isRTL && <IconComponent className="h-4 w-4 shrink-0 text-muted-foreground" />}
-              <span className="truncate">{selectedOption ? selectedOption.label : placeholder}</span>
+              <span className="truncate">{selectedOption ? selectedOption.title : placeholder}</span>
             </div>
             <div className="flex items-center gap-1 shrink-0 ml-auto">
               {loading ? <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /> : (
@@ -115,9 +115,9 @@ function SelectInputBase({
                   ) : "No options found"}
                 </div>
               ) : filteredOptions.map((option) => {
-                const isSelected = String(option.value) === String(value);
+                const isSelected = String(option.id) === String(value);
                 return (
-                  <div key={option.value} onClick={() => !option.disabled && handleSelect(option)}
+                  <div key={option.id} onClick={() => !option.disabled && handleSelect(option)}
                     className={cn(
                       "relative flex items-center justify-between px-3 py-2 text-sm cursor-pointer select-none transition-colors",
                       option.disabled ? "text-muted-foreground opacity-50 cursor-not-allowed" : "hover:bg-accent hover:text-accent-foreground",
@@ -126,7 +126,7 @@ function SelectInputBase({
                   >
                     <div className="flex items-center gap-2 truncate">
                       {option.icon && <span className="shrink-0">{option.icon}</span>}
-                      <span className="truncate">{option.label}</span>
+                      <span className="truncate">{option.title}</span>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       {optionEnd && optionEnd(option)}

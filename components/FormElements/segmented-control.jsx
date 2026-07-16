@@ -50,12 +50,12 @@ function SegmentedControlBase({
         )}
       >
         {options.map((option) => {
-          const isSelected = value === option.value;
+          const isSelected = value === option.id;
           return (
             <button
-              key={option.value}
+              key={option.id}
               type="button"
-              onClick={() => handleSelect(option.value)}
+              onClick={() => handleSelect(option.id)}
               disabled={disabled || option.disabled}
               className={cn(
                 "relative inline-flex items-center justify-center rounded-md font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
@@ -69,7 +69,7 @@ function SegmentedControlBase({
               {option.icon && (
                 <span className="mr-2">{option.icon}</span>
               )}
-              {option.label}
+              {option.title}
             </button>
           );
         })}

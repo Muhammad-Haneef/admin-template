@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { InfoCircledIcon, MagnifyingGlassIcon, PersonIcon } from "@radix-ui/react-icons";
+import { Info, Search, User } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -146,7 +146,7 @@ export default function UserSelector({
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <InfoCircledIcon className="h-4 w-4 text-muted-foreground cursor-help" />
+                  <Info className="h-4 w-4 text-muted-foreground cursor-help" />
                 </TooltipTrigger>
                 <TooltipContent>
                   <p className="text-xs max-w-xs">{tooltip}</p>
@@ -184,7 +184,7 @@ export default function UserSelector({
           <>
             <Avatar className="h-10 w-10 bg-muted">
               <AvatarFallback>
-                <PersonIcon className="h-5 w-5 text-muted-foreground" />
+                <User className="h-5 w-5 text-muted-foreground" />
               </AvatarFallback>
             </Avatar>
             <span className="text-sm text-muted-foreground">{placeholder}</span>
@@ -205,7 +205,7 @@ export default function UserSelector({
 
           <div className="space-y-4">
             <div className="relative">
-              <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search by name or email..."
                 value={searchTerm}
@@ -258,7 +258,7 @@ export default function UserSelector({
                 </div>
               ) : (
                 <div className="text-center py-12">
-                  <PersonIcon className="h-12 w-12 mx-auto mb-2 text-muted-foreground" />
+                  <User className="h-12 w-12 mx-auto mb-2 text-muted-foreground" />
                   <p className="text-sm text-muted-foreground">No users found</p>
                 </div>
               )}

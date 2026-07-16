@@ -12,7 +12,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { InfoCircledIcon, MagnifyingGlassIcon } from "@radix-ui/react-icons";
+import { Info, Search } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -84,7 +84,7 @@ export default function IconPicker({
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <InfoCircledIcon className="h-4 w-4 text-muted-foreground cursor-help" />
+                  <Info className="h-4 w-4 text-muted-foreground cursor-help" />
                 </TooltipTrigger>
                 <TooltipContent>
                   <p className="text-xs max-w-xs">{tooltip}</p>
@@ -123,7 +123,7 @@ export default function IconPicker({
             {/* Left: Icon Grid */}
             <div className="flex-1 flex flex-col">
               <div className="relative mb-4">
-                <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search icons..."
                   value={searchQuery}

@@ -134,15 +134,15 @@ const categories = [
 ];
 
 const plans = [
-  { value: "free", label: "Free", description: "Basic features for personal use" },
-  { value: "pro", label: "Pro", description: "Advanced features for professionals" },
-  { value: "enterprise", label: "Enterprise", description: "Custom solutions for teams" },
+  { id: "free", title: "Free", description: "Basic features for personal use" },
+  { id: "pro", title: "Pro", description: "Advanced features for professionals" },
+  { id: "enterprise", title: "Enterprise", description: "Custom solutions for teams" },
 ];
 
 const features = [
-  { value: "analytics", label: "Analytics", description: "Track your performance" },
-  { value: "api", label: "API Access", description: "Integrate with other tools" },
-  { value: "support", label: "Priority Support", description: "24/7 customer service" },
+  { id: "analytics", title: "Analytics", description: "Track your performance" },
+  { id: "api", title: "API Access", description: "Integrate with other tools" },
+  { id: "support", title: "Priority Support", description: "24/7 customer service" },
 ];
 
 export default function FormShowcase() {
@@ -370,9 +370,9 @@ export default function FormShowcase() {
                   
                   <CheckboxCards
                     name="features"
-                    label="Select Features"
+                    title="Select Features"
                     options={features}
-                    maxSelection={2}
+                    max={2}
                     helperText="Choose up to 2 features"
                   />
                 </CardContent>

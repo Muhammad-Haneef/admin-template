@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { useFormContext } from "react-hook-form";
 import { Label } from "@/components/ui/label";
-import { InfoCircledIcon } from "@radix-ui/react-icons";
+import { Info } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -452,7 +452,7 @@ export default function RichTextEditor({
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <InfoCircledIcon className="h-4 w-4 text-muted-foreground cursor-help" />
+                  <Info className="h-4 w-4 text-muted-foreground cursor-help" />
                 </TooltipTrigger>
                 <TooltipContent>
                   <p className="text-xs max-w-xs">{tooltip}</p>

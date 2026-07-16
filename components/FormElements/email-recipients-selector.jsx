@@ -6,13 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  InfoCircledIcon,
-  Cross2Icon,
-  ChevronDownIcon,
-  CheckIcon,
-  PlusIcon,
-} from "@radix-ui/react-icons";
+import { Info, X, ChevronDown, Check, Plus } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -234,7 +228,7 @@ export default function EmailRecipientsSelector({
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <InfoCircledIcon className="h-4 w-4 text-muted-foreground cursor-help" />
+                  <Info className="h-4 w-4 text-muted-foreground cursor-help" />
                 </TooltipTrigger>
                 <TooltipContent>
                   <p className="text-xs max-w-xs">{tooltip}</p>
@@ -272,7 +266,7 @@ export default function EmailRecipientsSelector({
                       }}
                       className="hover:text-destructive"
                     >
-                      <Cross2Icon className="h-3 w-3" />
+                      <X className="h-3 w-3" />
                     </button>
                   </Badge>
                 ))}
@@ -329,7 +323,7 @@ export default function EmailRecipientsSelector({
                       }`}
                     >
                       <span>{opt.label}</span>
-                      {isSelected && <CheckIcon className="h-4 w-4" />}
+                      {isSelected && <Check className="h-4 w-4" />}
                     </button>
                   );
                 })}
@@ -346,7 +340,7 @@ export default function EmailRecipientsSelector({
               }}
               className="w-full flex items-center gap-2 px-4 py-3 text-sm text-primary hover:bg-primary/10 transition-colors"
             >
-              <PlusIcon className="h-4 w-4" />
+              <Plus className="h-4 w-4" />
               Add additional recipient
             </button>
           </div>
